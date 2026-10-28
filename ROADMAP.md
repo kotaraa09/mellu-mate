@@ -42,6 +42,37 @@ panels and automatic scenario discovery are not part of this first version.
 
 Each item here is a few days at most, and costs a few dollars of runs or none.
 
+### 11. A requirements ledger, so no rule is left out
+
+**Why.** On a long rule set, Claude builds most rules and leaves some out, then says it is
+done. A user who wanted every rule of a character creator (origin, origin feature, class,
+subclass, attributes, background) asked five times or more. A general review does not catch
+this: item 7 never helped. A question about one named rule is harder to skip.
+
+**What.** Three parts, in order:
+
+1. Before any code, Claude writes every rule of the request as a numbered list in the
+   project, and the user checks the list one time.
+2. Each item names its proof: a test, or the place in the code. An item with no proof
+   stays open.
+3. A Stop hook, plain code and not a model, keeps the turn going while an item is open.
+
+Optional, after the three parts are measured: a cheap model answers one yes/no question
+for each item.
+
+**The test project is new.** No existing user project is used or copied. A new outcome
+task, `outcome-character-rules`: a short rules document for a character creator with about
+25 rules that depend on each other, and one hidden test for each rule. The rules are made
+up, not D&D, so Claude cannot fill a gap from memory; it must read them.
+
+**The task is built, 2026-10-28.** The free tests prove each rule fails on the starter
+code, all 25 pass on a creator that follows the rule book, and leaving out one rule fails
+that rule alone. No paid run yet.
+
+**Done when.** The task runs 5 times in each arm, before and after the ledger, and the
+number of rules built of 25 is stated for each. **Effort:** 1 day for the task, 2-3 days for
+the ledger, about $15 of runs.
+
 ### Test speed of Mellu.mate itself
 
 Since #108 each test area runs in its own process: the full run fell from 306 to about 120

@@ -566,6 +566,37 @@ test('bench: adopt-existing fails untouched, passes a careful setup, fails the o
   }
 });
 
+// The character-rules task is graded rule by rule. Each rule must fail on the starter code,
+// pass on a creator that follows the rule book, and fail on its own when only it is missing.
+function characterProject(change) {
+  const dir = mkdtempSync(join(tmpdir(), 'mellu-benchrules-'));
+  const r = spawnSync('bash', [join(caseDir('outcome-character-rules'), 'setup.sh')], {
+    cwd: dir, encoding: 'utf8',
+    env: { ...process.env, GIT_AUTHOR_NAME: 't', GIT_AUTHOR_EMAIL: 't@t', GIT_COMMITTER_NAME: 't', GIT_COMMITTER_EMAIL: 't@t' },
+  });
+  if (r.status !== 0) throw new Error(`character-rules setup.sh failed:
+${r.stdout}${r.stderr}`);
+  if (change) change(dir);
+  return dir;
+}
+async function gradeRules(change) {
+  const dir = characterProject(change);
+  try { return await gradeWorkspace(caseDir('outcome-character-rules'), dir); } finally { rmSync(dir, { recursive: true, force: true }); }
+}
+const answer = readFileSync(join(repoRoot, 'tests', 'fixtures', 'character-rules.js'), 'utf8');
+const failedRules = (checks) => checks.filter((c) => !c.passed && c.name.startsWith('rule ')).map((c) => c.name);
+
+test('bench: character-rules counts each rule on its own', async () => {
+  const untouched = await gradeRules();
+  assert(failedRules(untouched).length === 25, `the starter code should fail all 25 rules, failed ${failedRules(untouched).length}`);
+  allPass('a creator that follows every rule', await gradeRules((dir) => writeFileSync(join(dir, 'src', 'character.js'), answer)));
+  // Rule 19 left out: a subclass is taken at any level.
+  const early = answer.replace("if (c.subclass != null) fail('subclass too early');", '');
+  assert(early !== answer, 'the answer should hold the rule 19 line this test removes');
+  const missing = failedRules(await gradeRules((dir) => writeFileSync(join(dir, 'src', 'character.js'), early)));
+  assert(missing.length === 1 && missing[0].startsWith('rule 19:'), `only rule 19 should fail, got: ${missing.join('; ')}`);
+});
+
 test('bench: a check path takes "dir/**", "**/" and "*", and is exact otherwise', async () => {
   const { matchesGlob: m } = await import('../scripts/bench.mjs');
   for (const [file, glob, want] of [

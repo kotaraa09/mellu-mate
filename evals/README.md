@@ -1,7 +1,7 @@
 # Evals
 
 Nineteen cases that check **which skill fires on which sentence**, run by `claude plugin eval`.
-Thirteen more, in [`outcomes/`](outcomes/), check **whether the result works**. See
+Fourteen more, in [`outcomes/`](outcomes/), check **whether the result works**. See
 [the outcome benchmark](#the-outcome-benchmark).
 
 ## The gap they cover
@@ -515,6 +515,19 @@ you found it" fixed that.
 Without the style, one Thai bug-fix run of three still opened with an English note ("This
 is a small, simple decisions log - not worth adding..."), despite the language line from
 0.2.0. With the style on, none did.
+
+**A long rule set, graded rule by rule.** `outcome-character-rules` runs in its own small
+project, not the shop: a character creator for a made-up tabletop game, with a rule book of
+25 rules that depend on each other (origin, scores, class, subclass, background, skills) and
+code that follows none of them. The beginner says "make the character creator follow every
+rule in RULES.md". `check.mjs` has one check per rule, each one named test of
+`hidden.test.mjs` (`only: 'R07'`), so a run's checks say how many rules it built and which
+ones it left out. The rules are made up, so Claude cannot fill a gap from memory of a real
+game. It measures roadmap item 11, the requirements ledger, before and after:
+
+```bash
+node scripts/bench.mjs --case outcome-character-rules
+```
 
 **Setup in a project someone else started.** `outcome-adopt-existing` runs setup in a
 recipe site that a friend handed over: `docs/` is a published MkDocs site, decisions are one
