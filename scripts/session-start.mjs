@@ -65,10 +65,26 @@ function sections(md) {
   return out;
 }
 
-function opener(md) {
+// Each line the opener reads back stays this short. A user's Now grew into one paragraph of
+// about 2,700 characters, because Claude added to it after each piece of work, and the opener
+// read it all back. The cut keeps whole sentences, or whole words, and says where the rest is.
+const LINE_MAX = 180;
+// Past this, Now is a running summary, not the work in progress, and Claude is asked to tidy it.
+const NOW_MAX = 400;
+
+function brief(text, plan, max = LINE_MAX) {
+  if (text.length <= max) return text;
+  const room = text.slice(0, max);
+  const sentence = room.lastIndexOf('. ');
+  const cut = sentence > max / 3 ? room.slice(0, sentence + 1) : room.replace(/\s+\S*$/, '');
+  return `${cut} ... (the rest is in ${plan})`;
+}
+
+function opener(md, plan = 'docs/STATE.md') {
   const s = sections(md);
   const unchecked = (lines) => lines.map((l) => l.match(/^\s*[-*] \[ \]\s+(.+)/)?.[1]).filter(Boolean);
-  const plain = (l) => l.replace(/^\s*[-*]\s+(\[[ x]\]\s+)?/, '').trim();
+  // A list mark, a tick box, or the section's own name written as a label ("Now: ...").
+  const plain = (l) => l.replace(/^\s*[-*]\s+(\[[ x]\]\s+)?/, '').replace(/^\**(Now|Next|Blocked):\**\s*/i, '').trim();
 
   const nowLines = s.Now ?? [];
   const now = unchecked(nowLines)[0] ?? (nowLines[0] ? plain(nowLines[0]) : 'nothing in progress');
@@ -76,7 +92,7 @@ function opener(md) {
   const blocked = (s.Blocked ?? []).map(plain).join('; ') || 'none';
   const debt = (s.Debt ?? []).filter((l) => /^\s*[-*]\s+/.test(l)).map(plain);
 
-  const lines = [`**Now:** ${now}`, `**Next:** ${next}`, `**Blocked:** ${blocked}`];
+  const lines = [`**Now:** ${brief(now, plan)}`, `**Next:** ${brief(plain(next), plan)}`, `**Blocked:** ${brief(blocked, plan)}`];
   // All of this stays in the context of every later turn, so it is kept short.
   // The labels and the fallbacks are English. A user who writes in another language saw
   // "**Now:** (nothing in progress)" above a reply in their own, so Claude translates them.
@@ -93,6 +109,15 @@ function opener(md) {
       debt.map((d) => `- ${d}`).join('\n');
   }
   text += '\n\nThen answer what the user asked, if anything. Do not summarise the project.';
+  const nowText = nowLines.join(' ');
+  if (nowText.length > NOW_MAX) {
+    // A line sent with the session changes what Claude does; a rule inside a skill did not.
+    text += `\n\nThe ## Now section of ${plan} has grown to ${nowText.split(/\s+/).length} words, so it no ` +
+      'longer reads at a glance. When you next update that file, rewrite ## Now as one short line per task ' +
+      "still in progress, in the user's words. Move finished work to ## Done (the ten most recent; older " +
+      'entries go to docs/CHANGELOG.md, newest first). Move every fact, and delete none. Tell the user in ' +
+      'one plain line that you tidied it.';
+  }
   return text;
 }
 
@@ -116,7 +141,7 @@ if (moved) parts.push(moved);
 if (COMPACT) {
   // Nothing here: see above.
 } else if (setUp) {
-  parts.push(opener(state));
+  parts.push(opener(state, where.state));
 } else if (!hasCode()) {
   parts.push('This project is not set up for Mellu.mate yet, and it has no code. Invoke the ' +
     '`kickoff` skill before doing anything else, including before answering in detail. If the ' +

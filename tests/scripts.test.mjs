@@ -270,6 +270,25 @@ const STATE = [
   '## Done', '- Set up the project', '',
 ].join('\n');
 
+// A user's Now section grew into one paragraph of about 2,700 characters, because Claude added
+// to it after each piece of work, and the opener read all of it back: "I can't read it anymore".
+test('session-start: a long Now is cut short, and Claude is told to tidy it', async () => {
+  const sentence = 'Part P is built and its database steps are applied, so the spell list is complete. ';
+  const long = sentence.repeat(30).trim();
+  const r = await opener({ 'docs/STATE.md': STATE.replace('- [ ] Add the contact form', `Now: ${long}`), 'index.html': '' });
+  const line = r.out.match(/\*\*Now:\*\* (.*)/)?.[1] ?? '';
+  assert(line.length > 0 && line.length <= 220, `the Now line must stay short, it was ${line.length} characters:\n${line}`);
+  assertMatch(line, /^Part P is built/, 'the cut line keeps how it starts.');
+  assertMatch(line, /docs\/STATE\.md/, 'the cut line says where the rest is.');
+  assertMatch(r.out, /one short line per task still in progress/, 'Claude must be told to tidy Now.');
+  assertMatch(r.out, /## Done/, 'finished work must move to Done, not be deleted.');
+});
+
+test('session-start: a short Now is read back whole, with no tidy note', async () => {
+  const r = await opener({ 'docs/STATE.md': STATE, 'index.html': '' });
+  assert(!/one short line per task/.test(r.out), `a short Now needs no tidying:\n${r.out}`);
+});
+
 test('session-start: an empty folder goes straight to kickoff', async () => {
   const r = await opener({});
   assert(r.code === 0, `it exited ${r.code}:\n${r.out}`);
