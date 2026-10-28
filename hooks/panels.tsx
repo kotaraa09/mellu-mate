@@ -648,19 +648,16 @@ export const register: Register = (on) => {
     const fill = percent === null ? 'subtle' : percent >= 80 ? 'error' : percent >= 50 ? 'warning' : 'success'
     // With the split, the bar is drawn in each part's colour, as /context draws its grid.
     const cells = Math.max(10, width - 4)
+    // Each part is a coloured Box as wide as its share, and free space fills the rest. Blocks of
+    // text ran past the pane in the desktop app, twice: its font draws them at another width
+    // than the pane's column count assumes. A width in percent fits whatever the font.
     const bar = split.length
-      ? (() => {
-        const sized = split.map((p) => ({ ...p, cells: Math.round((p.percent / 100) * cells) }))
-        const used = Math.min(cells, sized.reduce((n, p) => n + p.cells, 0))
-        // Free space is the same block in grey: the desktop app drew '░' wider than '█', and
-        // the bar ran past the pane onto a second line. One line, clipped, whatever the font.
-        return (
-          <Box key="context-bar" flexDirection="row" flexWrap="nowrap" height={1} overflow="hidden">
-            {sized.filter((p) => p.cells > 0).map((p) => <Text key={`bar-${p.name}`} color={p.color}>{'█'.repeat(p.cells)}</Text>)}
-            <Text key="bar-free" color="inactive" dimColor>{'█'.repeat(cells - used)}</Text>
-          </Box>
-        )
-      })()
+      ? (
+        <Box key="context-bar" flexDirection="row" width="100%" height={1} overflow="hidden">
+          {split.map((p) => <Box key={`bar-${p.name}`} width={`${p.percent}%`} height={1} flexShrink={0} backgroundColor={p.color} />)}
+          <Box key="bar-free" flexGrow={1} height={1} backgroundColor="inactive" />
+        </Box>
+      )
       : <Text color={fill} wrap="truncate">{contextBar(percent, cells)}</Text>
     const legend = split.length > 0 && (
       <Box key="context-parts" flexDirection="row" flexWrap="wrap" columnGap={2}>
