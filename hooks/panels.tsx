@@ -40,6 +40,22 @@ export const money = (usd: number | null): string =>
 export const tokens = (n: number | null): string =>
   n === null ? '-' : n >= 1000 ? `${Math.round(n / 1000)}k` : String(n)
 
+// What fills the conversation, as /context splits it: each part in the window, its share of
+// the window, and the colour /context draws it in. Free space and the compaction reserve are
+// not parts, and tool schemas loaded on demand sit outside the window, as /context has it.
+export type ContextPart = { name: string; tokens: number; percent: number; color: string }
+
+export function contextParts(b: { rawMaxTokens?: number; categories?: ReadonlyArray<{ name: string; tokens: number; color: string; kind: string }> } | undefined): ContextPart[] {
+  const window = b?.rawMaxTokens ?? 0
+  if (!window) return []
+  return (b?.categories ?? [])
+    .filter((c) => c.kind === 'used' && c.tokens > 0)
+    .map((c) => ({ name: c.name, tokens: c.tokens, percent: (c.tokens / window) * 100, color: c.color }))
+}
+
+// A share as /context prints it: a whole number, and under 1% as such.
+export const share = (percent: number): string => (percent < 1 ? '<1%' : `${Math.round(percent)}%`)
+
 // How full the conversation is, as a bar of `width` cells.
 export const contextBar = (percent: number | null, width: number): string => {
   const full = percent === null ? 0 : Math.max(0, Math.min(width, Math.round((percent / 100) * width)))
@@ -558,8 +574,10 @@ export const register: Register = (on) => {
     const { Box, Text, Button, Select } = table
     // Read side by side, and the figures fresh: the panel shows how full the conversation is
     // now, not as it was at the end of the last request.
-    const [s, kept, live, help, last, asking, now] = await Promise.all([
+    // The split is /context's own `summary` count: estimated here, with no request to the API.
+    const [s, kept, live, help, last, asking, now, split] = await Promise.all([
       readSettings($), read($, usage), readUsage($), read($, controlsHelp), read($, pressed), read($, clearAsk), $.clock.now(),
+      $.session.usage({ breakdown: 'summary' }).then((x: any) => contextParts(x?.context?.breakdown), () => [] as ContextPart[]),
     ])
     const u = live.contextTokens !== null ? live : kept
     const width = paneWidth(e)
@@ -626,6 +644,30 @@ export const register: Register = (on) => {
     // figure into a menu, and a beginner did not find it there.
     const percent = u.contextPercent ?? (u.contextTokens !== null && u.contextWindow ? Math.round((u.contextTokens / u.contextWindow) * 100) : null)
     const fill = percent === null ? 'subtle' : percent >= 80 ? 'error' : percent >= 50 ? 'warning' : 'success'
+    // With the split, the bar is drawn in each part's colour, as /context draws its grid.
+    const cells = Math.max(10, width - 4)
+    const bar = split.length
+      ? (() => {
+        const sized = split.map((p) => ({ ...p, cells: Math.round((p.percent / 100) * cells) }))
+        const used = Math.min(cells, sized.reduce((n, p) => n + p.cells, 0))
+        return (
+          <Box key="context-bar" flexDirection="row">
+            {sized.filter((p) => p.cells > 0).map((p) => <Text key={`bar-${p.name}`} color={p.color}>{'█'.repeat(p.cells)}</Text>)}
+            <Text key="bar-free" color="subtle">{'░'.repeat(cells - used)}</Text>
+          </Box>
+        )
+      })()
+      : <Text color={fill} wrap="truncate">{contextBar(percent, cells)}</Text>
+    const legend = split.length > 0 && (
+      <Box key="context-parts" flexDirection="row" flexWrap="wrap" columnGap={2}>
+        {split.map((p) => (
+          <Box key={`part-${p.name}`} gap={1}>
+            <Text color={p.color}>■</Text>
+            <Text color="subtle">{`${p.name} ${share(p.percent)}`}</Text>
+          </Box>
+        ))}
+      </Box>
+    )
     const conversation = (
       <Box key="conversation" flexDirection="column">
         <Box justifyContent="space-between" gap={1}>
@@ -634,7 +676,8 @@ export const register: Register = (on) => {
             {percent === null ? 'size not known yet' : `${Math.round(percent)}% full · ${tokens(u.contextTokens)} of ${tokens(u.contextWindow)}`}
           </Text>
         </Box>
-        <Text color={fill} wrap="truncate">{contextBar(percent, Math.max(10, width - 4))}</Text>
+        {bar}
+        {legend}
         {asking
           ? (
             <Box flexDirection="column" borderStyle="round" borderColor="warning" paddingX={1}>
@@ -681,7 +724,6 @@ export const register: Register = (on) => {
           {row('plain-row', 'Plain answers', help ? `${PLAIN_NOTE}. ${PLAIN_HELP}` : null, toggle(s.plain, 'plain', 'plain',
             command('plain', 'Plain answers on', 'mellu:plain', 'on'), command('plain', 'Plain answers off', 'mellu:plain', 'off')))}
         </Box>
-        {conversation}
         {group([
           { key: 'filetree', label: 'Project files', note: 'A list of your files beside the chat. Changes nothing',
             onPress: command('filetree', 'Project files', 'filetree') },
@@ -695,6 +737,8 @@ export const register: Register = (on) => {
             onPress: command('connect', 'Connect services', 'mellu:connect') },
         ])}
         <Text color="promptBorder" wrap="truncate">{RULE}</Text>
+        {/* At the bottom, as the user asked: the figures under the controls. */}
+        {conversation}
         <Box justifyContent="space-between" alignItems="center" gap={1}>
           <Text color="subtle" wrap="truncate">Session {money(u.costUsd)}</Text>
           <Button key="controls-help" plain label={help ? 'Hide explanations' : 'What do these do?'}

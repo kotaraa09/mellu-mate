@@ -14,8 +14,11 @@ const SURFACES = ['terminal', 'desktop'] as const
 // files, and the session's figures.
 // The conversation's size the engine reports; a test sets it to make a conversation long.
 let contextTokens = 50_000
+// The /context breakdown the engine hands back when asked; none unless a test sets one.
+let breakdown: any = undefined
 const project = (on: On, files: Record<string, string>, { git = true } = {}) => {
   contextTokens = 50_000
+  breakdown = undefined
   const clock = mock.clock(on, { now: 1_000_000 })
   on('fs.exists', async (_$, e: any) => ({ value: git && /[\\/]\.git$/.test(String(e.path)) }) as any)
   on('session.root', async () => ({ value: '/p' }) as any)
@@ -24,7 +27,8 @@ const project = (on: On, files: Record<string, string>, { git = true } = {}) => 
     const { Box } = $.ui.resolve(e)
     return <Box />
   })
-  on('session.usage', async () => ({ value: { startedAt: 0, rateLimits: [], context: { tokens: contextTokens, window: 200_000, percent: 25 }, cost: { usd: 0.5 } } }) as any)
+  on('session.usage', async (_$, e: any) => ({ value: { startedAt: 0, rateLimits: [], cost: { usd: 0.5 },
+    context: { tokens: contextTokens, window: 200_000, percent: 25, ...(e?.breakdown && breakdown ? { breakdown } : {}) } } }) as any)
   on('fs.read', async (_$, e: any) => {
     // The engine hands the path over in the platform's own form: D:\p\docs\STATE.md here.
     const rel = String(e.path).replace(/\\/g, '/').replace(/^([A-Za-z]:)?\/p\//, '')
@@ -331,9 +335,15 @@ describe('the panels, drawn', () => {
       { content: 'Read the menu', status: 'in_progress' }, { content: 'Tidy it', status: 'pending' },
     ] } as any)
     await $.tool.call({ tool: 'mcp__ccd_turn__update_plan', advance: true } as any)
+    await $.tool.call({ tool: 'Edit', file_path: '/p/menu.html' } as any)
     const ui = await $.ui.mount({ plugin: 'mellu', surface: 'terminal', ...band() })
     expect(await ui.find({ type: 'Text', text: '1/2 steps' })).toBeDefined()
     await ui.unmount()
+    // The progress panel keeps listing what Claude did: the user asked for it back.
+    const panel = await $.ui.mount({ plugin: 'mellu', surface: 'terminal', ...pane('mellu-helpers') })
+    expect(await panel.find({ type: 'Text', text: /Changed menu.html/ })).toBeDefined()
+    expect(await panel.find({ type: 'Text', text: /^Steps ·/ })).toBeUndefined()
+    await panel.unmount()
   })
 
   test('the bar always has a Details button, and the progress panel lists the steps', async ($, on) => {
@@ -532,9 +542,21 @@ describe('the panels, drawn', () => {
     const ran: string[] = []
     on('command.run', async (_$, e) => { ran.push(e.command); return { text: '' } })
     // The panel reads the session's figures as it draws: 50k of 200k here.
+    // And it splits them as /context does.
+    breakdown = { rawMaxTokens: 200_000, categories: [
+      { name: 'System prompt', tokens: 6_000, color: 'promptBorder', isDeferred: false, kind: 'used' },
+      { name: 'Messages', tokens: 38_000, color: 'permission', isDeferred: false, kind: 'used' },
+      { name: 'System tools', tokens: 6_000, color: 'inactive', isDeferred: false, kind: 'used' },
+      { name: 'MCP tools', tokens: 9_000, color: 'success', isDeferred: true, kind: 'deferred' },
+      { name: 'Free space', tokens: 150_000, color: 'subtle', isDeferred: false, kind: 'free' },
+    ] }
     for (const surface of SURFACES) {
       const ui = await $.ui.mount({ plugin: 'mellu', surface, ...pane('mellu-controls') })
       expect(await ui.find({ type: 'Text', text: /25% full/ })).toBeDefined()
+      expect(await ui.find({ type: 'Text', text: /Messages 19%/ })).toBeDefined()
+      expect(await ui.find({ type: 'Text', text: /System tools 3%/ })).toBeDefined()
+      // Loaded on demand, outside the window: /context leaves it out of the grid too.
+      expect(await ui.find({ type: 'Text', text: /MCP tools/ })).toBeUndefined()
       await ui.press({ key: 'compact' })
       const before = ran.length
       await ui.press({ key: 'clear' })

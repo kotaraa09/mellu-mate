@@ -782,8 +782,10 @@ export const register: Register = on => {
     const finished = list.filter(a => a.status !== 'running').reverse()
     const t = totals(list, at)
 
-    // The request's rows: its step list when Claude keeps one, else what it did lately.
-    const hasSteps = (r?.steps.length ?? 0) > 0
+    // The request's rows: its step list when Claude keeps one, else what it did lately. The
+    // desktop app's task list (ids `plan-`) feeds the bar alone: the app shows those steps
+    // under Claude's message already, and the user wanted the panel to keep the actions.
+    const hasSteps = (r?.steps ?? []).some(x => !x.id.startsWith('plan-'))
     const waitingRows: Row[] = r && r.endedAt !== null ? (r.waiting ?? []).map(w => ({ title: `${s.waitingFor}: ${w.label}`, status: 'running' })) : []
     const rows: Row[] = [...waitingRows, ...(r ? (hasSteps ? stepRows(r.steps) : actionRows(r)) : [])]
     // Steps are numbered from one; the rows of what it waits on, above them, are not.
