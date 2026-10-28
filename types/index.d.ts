@@ -45,6 +45,17 @@ export type Usage = {
   contextPercent: number | null
 }
 
+// A newer release of Mellu.mate, as the control panel offers it. Claude is never asked: the
+// panel checks GitHub's latest release itself, and the user presses Update or does not.
+export type UpdateInfo = {
+  // The installed version, from the plugin's own plugin.json; null until read.
+  current: string | null
+  // The latest published release and its page, or null when unknown.
+  latest: string | null
+  url: string | null
+  status: 'idle' | 'updating' | 'done' | 'failed'
+}
+
 export type Pressed = {
   key: string
   label: string
@@ -100,6 +111,8 @@ declare module 'claude-code' {
       pressed: Pressed | null
       // Whether the control panel asks "Start a fresh conversation?" before /clear.
       clearAsk: boolean
+      // A newer release, and how its update went.
+      update: UpdateInfo
     }
   }
 }

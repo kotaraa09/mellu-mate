@@ -15,6 +15,7 @@ import type { Register } from 'claude-code'
 import type { Request, Step, Usage, Waiting } from '../types'
 import { clearHeld, clearHistory, clearOnStart, clearOnTurnEnd, holdText } from './clear-reminder'
 import { HELPERS_DESCRIPTION, helperEnded } from './savvy-progress/register'
+import { ASK_CLAUDE, CHECK_EVERY_MS, PLUGIN_STEP, RELEASES, UPDATE_STEPS, latestFrom, newer } from './update'
 
 const CONTROLS = 'mellu-controls'
 
@@ -30,6 +31,8 @@ const controlsHelp = atom({ plugin: 'mellu', key: 'controlsHelp' } as const, fal
 // The button pressed last, while its note shows (see press), and the /clear question.
 const pressed = atom({ plugin: 'mellu', key: 'pressed' } as const, null)
 const clearAsk = atom({ plugin: 'mellu', key: 'clearAsk' } as const, false)
+// A newer release, and the update the button runs; see update.ts.
+const updateInfo = atom({ plugin: 'mellu', key: 'update' } as const, { current: null, latest: null, url: null, status: 'idle' })
 
 export const LEVELS = ['off', 'commit', 'push', 'pr', 'merge'] as const
 
@@ -316,7 +319,8 @@ const createRepo = async ($: any) => {
   const now = await $.clock.now()
   if (now - repoAskedAt < 60_000) return
   repoAskedAt = now
-  await say($, CREATE_REPO)
+  // Not awaited, as in press: a message waits while Claude works.
+  void say($, CREATE_REPO)
 }
 // What each setting does, shown under it while the explanations are on.
 const AUTOSHIP_NAME = 'When a task is done'
@@ -367,12 +371,57 @@ const press = async ($: any, key: string, label: string, work: () => Promise<unk
   const last = await read($, pressed)
   if (last?.key === key && now - last.at < PRESS_GAP_MS) return
   inFlight.add(key)
-  try {
-    const r = await read($, request)
-    await update($, pressed, () => ({ key, label, at: now, isQueued: r !== null && r.endedAt === null }))
-    $.clock.after(NOTE_MS, () => { void update($, pressed, (p) => (p?.at === now ? null : p)) })
-    await work()
-  } finally { inFlight.delete(key) }
+  const r = await read($, request)
+  await update($, pressed, () => ({ key, label, at: now, isQueued: r !== null && r.endedAt === null }))
+  $.clock.after(NOTE_MS, () => { void update($, pressed, (p) => (p?.at === now ? null : p)) })
+  // Not awaited: Claude Code gives a press 10 seconds, and a command or a message waits while
+  // Claude works. Awaited, the press ran past that, Claude Code dropped it, and the button
+  // seemed to do nothing until it was pressed again.
+  void work().catch(() => undefined).finally(() => inFlight.delete(key))
+}
+
+// --- the update button (update.ts) --------------------------------------------------------
+// Once per load of the module, in the background, when the control panel first draws: the
+// panel never waits on GitHub. The answer is kept for CHECK_EVERY_MS across sessions.
+let updateChecked = false
+const checkForUpdate = async ($: any) => {
+  // Each name written out: the engine lists the variables a module reads from its calls.
+  const off = await Promise.all([$.env.get('DISABLE_UPDATES'), $.env.get('DISABLE_AUTOUPDATER'), $.env.get('CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC')])
+  if (off.some(Boolean)) return
+  let current: string | null = null
+  try { current = JSON.parse(String(await $.fs.read(`${$.plugin.root}/.claude-plugin/plugin.json`)))?.version ?? null } catch { return }
+  if (!current) return
+  const now = await $.clock.now()
+  let known: any = await $.store.get('updateCheck')
+  if (!known || typeof known.at !== 'number' || now - known.at > CHECK_EVERY_MS) {
+    try {
+      const r = await $.http.fetch(RELEASES, { headers: { Accept: 'application/vnd.github+json' } })
+      const found = r.ok ? latestFrom(r.text) : null
+      if (found) { known = { at: now, ...found }; await $.store.set('updateCheck', known) }
+    } catch { /* offline: no button, and the next session asks again */ }
+  }
+  await update($, updateInfo, (u) => ({ ...u, current, latest: known?.version ?? null, url: known?.url ?? null }))
+}
+
+// Runs the update itself, with no turn of Claude's. Each step can take a minute, so it runs
+// in the background; the panel says how it went.
+const runUpdate = async ($: any) => {
+  if ((await read($, updateInfo)).status === 'updating') return
+  await update($, updateInfo, (u) => ({ ...u, status: 'updating' }))
+  void (async () => {
+    let ok = false
+    try {
+      for (const argv of UPDATE_STEPS) {
+        const r = await $.process.run(argv, { timeoutMs: 120_000 }).catch((e: unknown) => {
+          // The plugin's own step decides; a missing companion fails alone.
+          if (argv === PLUGIN_STEP) throw e
+          return null
+        })
+        if (argv === PLUGIN_STEP) ok = r?.exitCode === 0
+      }
+    } catch { ok = false }
+    await update($, updateInfo, (u) => ({ ...u, status: ok ? 'done' : 'failed' }))
+  })()
 }
 
 export const pressedNote = (p: { label: string; isQueued: boolean }): string =>
@@ -577,10 +626,41 @@ export const register: Register = (on) => {
     // Read side by side, and the figures fresh: the panel shows how full the conversation is
     // now, not as it was at the end of the last request.
     // The split is /context's own `summary` count: estimated here, with no request to the API.
-    const [s, kept, live, help, last, asking, now, split] = await Promise.all([
+    const [s, kept, live, help, last, asking, now, split, upd] = await Promise.all([
       readSettings($), read($, usage), readUsage($), read($, controlsHelp), read($, pressed), read($, clearAsk), $.clock.now(),
       $.session.usage({ breakdown: 'summary' }).then((x: any) => contextParts(x?.context?.breakdown), () => [] as ContextPart[]),
+      read($, updateInfo),
     ])
+    if (!updateChecked) { updateChecked = true; void checkForUpdate($).catch(() => undefined) }
+    const { Link } = table
+    const hasUpdate = upd.current !== null && upd.latest !== null && newer(upd.latest, upd.current)
+    // At the top, where an application shows its own update. Gone once it is installed.
+    const updateBox = hasUpdate && (
+      <Box key="update-box" flexDirection="column" borderStyle="round" borderColor={upd.status === 'failed' ? 'error' : upd.status === 'done' ? 'success' : 'suggestion'} paddingX={1}>
+        {upd.status === 'done'
+          ? <Text color="success" wrap="wrap">{`Mellu.mate is updated to ${upd.latest}. Start a new session to use it.`}</Text>
+          : upd.status === 'updating'
+            ? <Text wrap="wrap">{`Updating Mellu.mate to ${upd.latest}...`}</Text>
+            : upd.status === 'failed'
+              ? (
+                <Box flexDirection="column">
+                  <Text color="error" wrap="wrap">The update did not finish.</Text>
+                  <Text color="subtle" wrap="wrap">Claude can run it for you instead. That uses one message.</Text>
+                  <Box><Button key="update-ask" label="Ask Claude to update" onPress={() => press($, 'update-ask', 'Ask Claude to update', () => say($, ASK_CLAUDE))} /></Box>
+                </Box>
+              )
+              : (
+                <Box flexDirection="column">
+                  <Text bold wrap="wrap">{`Mellu.mate ${upd.latest} is out`}</Text>
+                  <Text color="subtle" wrap="wrap">{`You have ${upd.current}. This session keeps working; the new version starts in your next session.`}</Text>
+                  <Box gap={1} alignItems="center">
+                    <Button key="update" variant="primary" label="⇧ Update" onPress={() => runUpdate($)} />
+                    {Link && upd.url && <Link key="update-notes" href={upd.url}>What's new</Link>}
+                  </Box>
+                </Box>
+              )}
+      </Box>
+    )
     const u = live.contextTokens !== null ? live : kept
     const width = paneWidth(e)
     const note = last && now - last.at < NOTE_MS ? pressedNote(last) : null
@@ -703,6 +783,7 @@ export const register: Register = (on) => {
     )
     return (
       <Box flexDirection="column" paddingX={1} gap={1}>
+        {updateBox}
         {note && <Text key="pressed-note" color="success" wrap="wrap">{note}</Text>}
         {!s.setUp && (
           <Box flexDirection="column" borderStyle="round" borderColor="suggestion" paddingX={1}>
