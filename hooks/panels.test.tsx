@@ -545,7 +545,7 @@ describe('the panels, drawn', () => {
     // And it splits them as /context does.
     breakdown = { rawMaxTokens: 200_000, categories: [
       { name: 'System prompt', tokens: 6_000, color: 'promptBorder', isDeferred: false, kind: 'used' },
-      { name: 'Messages', tokens: 38_000, color: 'permission', isDeferred: false, kind: 'used' },
+      { name: 'Messages', tokens: 39_000, color: 'permission', isDeferred: false, kind: 'used' },
       { name: 'System tools', tokens: 6_000, color: 'inactive', isDeferred: false, kind: 'used' },
       { name: 'MCP tools', tokens: 9_000, color: 'success', isDeferred: true, kind: 'deferred' },
       { name: 'Free space', tokens: 150_000, color: 'subtle', isDeferred: false, kind: 'free' },
@@ -553,7 +553,7 @@ describe('the panels, drawn', () => {
     for (const surface of SURFACES) {
       const ui = await $.ui.mount({ plugin: 'mellu', surface, ...pane('mellu-controls') })
       expect(await ui.find({ type: 'Text', text: /25% full/ })).toBeDefined()
-      expect(await ui.find({ type: 'Text', text: /Messages 19%/ })).toBeDefined()
+      expect(await ui.find({ type: 'Text', text: /Messages 20%/ })).toBeDefined()
       expect(await ui.find({ type: 'Text', text: /System tools 3%/ })).toBeDefined()
       // Loaded on demand, outside the window: /context leaves it out of the grid too.
       expect(await ui.find({ type: 'Text', text: /MCP tools/ })).toBeUndefined()

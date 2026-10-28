@@ -648,14 +648,16 @@ export const register: Register = (on) => {
     const fill = percent === null ? 'subtle' : percent >= 80 ? 'error' : percent >= 50 ? 'warning' : 'success'
     // With the split, the bar is drawn in each part's colour, as /context draws its grid.
     const cells = Math.max(10, width - 4)
-    // Each part is a coloured Box as wide as its share, and free space fills the rest. Blocks of
-    // text ran past the pane in the desktop app, twice: its font draws them at another width
-    // than the pane's column count assumes. A width in percent fits whatever the font.
+    // Each part is a coloured Box that grows by its share of the row, and free space by the
+    // rest. Blocks of text ran past the pane in the desktop app, twice: its font draws them at
+    // another width than the pane's column count assumes. Shares of the row fit any font. (A
+    // width like "19.53%" was refused, and the whole panel went blank.)
+    const free = Math.max(0, 100 - split.reduce((n, p) => n + p.percent, 0))
     const bar = split.length
       ? (
         <Box key="context-bar" flexDirection="row" width="100%" height={1} overflow="hidden">
-          {split.map((p) => <Box key={`bar-${p.name}`} width={`${p.percent}%`} height={1} flexShrink={0} backgroundColor={p.color} />)}
-          <Box key="bar-free" flexGrow={1} height={1} backgroundColor="inactive" />
+          {split.map((p) => <Box key={`bar-${p.name}`} width={0} flexGrow={p.percent} height={1} backgroundColor={p.color} />)}
+          {free > 0 && <Box key="bar-free" width={0} flexGrow={free} height={1} backgroundColor="inactive" />}
         </Box>
       )
       : <Text color={fill} wrap="truncate">{contextBar(percent, cells)}</Text>
