@@ -22,7 +22,7 @@ What feeds it changed.
   calls to report a plan. A tool's description is sent with every message, so both would
   add to the cost of every request. The bar reads the request record that
   `hooks/panels.tsx` already keeps from Claude's own step list (TodoWrite and the Task
-  tools) instead, and adds nothing to any request.
+  tools; the Claude desktop app's task list feeds the bar, not the panel) instead, and adds nothing to any request.
 - **The bar follows every request**, from the moment it is sent: its first words, the steps
   done out of the steps planned, and on the right the share done, the actions so far, or
   the time it took. Upstream showed it only for its own `savvy-flow` skill. Phases, which

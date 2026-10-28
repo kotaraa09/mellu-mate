@@ -273,6 +273,12 @@ export function ancestorsOf(id: string, root: string): string[] {
   return out
 }
 
+// Mellu.mate: the row a path shows as, the tree open as it is: the path itself when every
+// folder above it is open, or else the outermost closed folder above it.
+export function shownAs(id: string, root: string, open: ReadonlySet<string>): string {
+  return ancestorsOf(id, root).reverse().find(a => !open.has(a)) ?? id
+}
+
 export function relative(root: string, path: string): string {
   return path === root ? '' : path.slice(root.endsWith('/') ? root.length : root.length + 1)
 }

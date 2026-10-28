@@ -15,6 +15,7 @@ import type { Register } from 'claude-code'
 import type { Request, Step, Usage, Waiting } from '../types'
 import { clearHeld, clearHistory, clearOnStart, clearOnTurnEnd, holdText } from './clear-reminder'
 import { HELPERS_DESCRIPTION, helperEnded } from './savvy-progress/register'
+import { ASK_CLAUDE, CHECK_EVERY_MS, PLUGIN_STEP, RELEASES, UPDATE_STEPS, latestFrom, newer } from './update'
 
 const CONTROLS = 'mellu-controls'
 
@@ -27,6 +28,11 @@ const helpers = atom({ plugin: 'mellu', key: 'agents' } as const, [])
 const helpersNow = atom({ plugin: 'mellu', key: 'agentsNow' } as const, 0)
 // Whether the control panel explains each control. Off: the panel is short.
 const controlsHelp = atom({ plugin: 'mellu', key: 'controlsHelp' } as const, false)
+// The button pressed last, while its note shows (see press), and the /clear question.
+const pressed = atom({ plugin: 'mellu', key: 'pressed' } as const, null)
+const clearAsk = atom({ plugin: 'mellu', key: 'clearAsk' } as const, false)
+// A newer release, and the update the button runs; see update.ts.
+const updateInfo = atom({ plugin: 'mellu', key: 'update' } as const, { current: null, latest: null, url: null, status: 'idle' })
 
 export const LEVELS = ['off', 'commit', 'push', 'pr', 'merge'] as const
 
@@ -37,6 +43,30 @@ export const money = (usd: number | null): string =>
 export const tokens = (n: number | null): string =>
   n === null ? '-' : n >= 1000 ? `${Math.round(n / 1000)}k` : String(n)
 
+// What fills the conversation, as /context splits it: each part in the window, its share of
+// the window, and the colour /context draws it in. Free space and the compaction reserve are
+// not parts, and tool schemas loaded on demand sit outside the window, as /context has it.
+export type ContextPart = { name: string; tokens: number; percent: number; color: string }
+
+export function contextParts(b: { rawMaxTokens?: number; categories?: ReadonlyArray<{ name: string; tokens: number; color: string; kind: string }> } | undefined): ContextPart[] {
+  const window = b?.rawMaxTokens ?? 0
+  if (!window) return []
+  return (b?.categories ?? [])
+    .filter((c) => c.kind === 'used' && c.tokens > 0)
+    .map((c) => ({ name: c.name, tokens: c.tokens, percent: (c.tokens / window) * 100, color: c.color }))
+    // The largest first: the user looked for it at the start, and found it last.
+    .sort((a, b) => b.tokens - a.tokens)
+}
+
+// A share as /context prints it: a whole number, and under 1% as such.
+export const share = (percent: number): string => (percent < 1 ? '<1%' : `${Math.round(percent)}%`)
+
+// How full the conversation is, as a bar of `width` cells.
+export const contextBar = (percent: number | null, width: number): string => {
+  const full = percent === null ? 0 : Math.max(0, Math.min(width, Math.round((percent / 100) * width)))
+  return '█'.repeat(full) + '░'.repeat(width - full)
+}
+
 export const duration = (ms: number): string => {
   const s = Math.max(0, Math.round(ms / 1000))
   return s < 60 ? `${s}s` : `${Math.floor(s / 60)}m ${s % 60}s`
@@ -44,7 +74,7 @@ export const duration = (ms: number): string => {
 
 // --- the step list, from Claude's own -------------------------------------------------
 // TodoWrite sends the whole list each time. The Task tools send one change at a time, and
-// TaskCreate's id arrives only in its result.
+// TaskCreate's id arrives only in its result. The desktop app's task list is below.
 export function fromTodos(todos: ReadonlyArray<{ content: string; status: string; activeForm?: string }>): Step[] {
   return todos.map((t, i) => ({
     // Prefixed, so a TaskUpdate's id never lands on one of these.
@@ -63,6 +93,36 @@ export function applyTaskUpdate(steps: Step[], u: { taskId: string; status?: str
     doing: u.activeForm ?? s.doing,
     status: u.status === 'completed' || u.status === 'in_progress' || u.status === 'pending' ? u.status : s.status,
   }))
+}
+
+// The Claude desktop app gives Claude a task list of its own, shown under its message, and
+// Claude keeps that one there instead of TodoWrite. `items` sends the whole list; `advance`
+// finishes the step in progress and starts the next; `done` and `start` name steps by number,
+// from one. The wrap-up at the end of the turn checks the whole list off.
+export const isPlanTool = (tool: unknown): boolean => tool === 'mcp__ccd_turn__update_plan'
+const isWrapUp = (tool: unknown): boolean => tool === 'mcp__ccd_turn__wrap_up'
+
+const stepStatus = (s: unknown): Step['status'] => (s === 'completed' || s === 'in_progress' ? s : 'pending')
+
+export function applyPlan(
+  steps: Step[],
+  u: { items?: ReadonlyArray<{ content?: string; status?: string }>; advance?: boolean; done?: ReadonlyArray<number>; start?: number },
+  wrapUp = false,
+): Step[] {
+  if (wrapUp) return steps.map((s) => ({ ...s, status: 'completed' }))
+  if (Array.isArray(u.items)) {
+    return u.items.map((t, i) => ({ id: `plan-${i}`, title: String(t.content ?? ''), doing: String(t.content ?? ''), status: stepStatus(t.status) }))
+  }
+  const next = steps.map((s) => ({ ...s }))
+  if (u.advance) {
+    const now = next.find((s) => s.status === 'in_progress')
+    if (now) now.status = 'completed'
+    const after = next.find((s) => s.status === 'pending')
+    if (after) after.status = 'in_progress'
+  }
+  for (const n of u.done ?? []) if (next[n - 1]) next[n - 1].status = 'completed'
+  if (typeof u.start === 'number' && next[u.start - 1]) next[u.start - 1].status = 'in_progress'
+  return next
 }
 
 // --- the recent actions, for a request with no step list -------------------------------
@@ -88,6 +148,7 @@ export function actionLabel(e: { tool?: string; [k: string]: any }): string | nu
     case 'AskUserQuestion': return 'Asked you a question'
     case 'TodoWrite': case 'TaskCreate': case 'TaskUpdate': case 'TaskList': case 'TaskGet': case 'ToolSearch': return null
   }
+  if (isPlanTool(tool) || isWrapUp(tool)) return null
   if (/browser|chrome|preview/i.test(tool)) return 'Looked at the page'
   if (tool.startsWith('mcp__')) return 'Used a connected tool'
   return tool ? `Used ${tool}` : null
@@ -180,30 +241,43 @@ export function settingsFrom(files: { autoship: string | null; cheap: string | n
   return { autoship, cheap: files.cheap !== null, plain, setUp: files.state !== null && !files.state.includes('easyclaude:not-kicked-off'), git: files.git ?? true }
 }
 
-// Whether the project, or a folder above it, is a git repository. Autoship needs one.
-async function hasGit($: any, root: string): Promise<boolean> {
+// The project folder and each folder above it, nearest first.
+export function foldersUp(root: string): string[] {
+  const out: string[] = []
   let dir = root.replace(/[\\/]+$/, '')
   for (let i = 0; i < 30 && dir; i++) {
-    try { if (await $.fs.exists(`${dir}/.git`)) return true } catch { return true }
+    out.push(dir)
     const up = dir.replace(/[\\/][^\\/]*$/, '')
     if (up === dir) break
     dir = up
   }
-  return false
+  return out
 }
 
+// Whether the project, or a folder above it, is a git repository. Autoship needs one. All
+// at once: one at a time, a deep folder kept the control panel waiting on every redraw.
+async function hasGit($: any, root: string): Promise<boolean> {
+  const found = await Promise.all(foldersUp(root).map((dir) => $.fs.exists(`${dir}/.git`).then(Boolean, () => true)))
+  return found.some(Boolean)
+}
+
+// Read each time the panel draws, so a setting changed by a command shows at once. The files
+// are read side by side: one after another, they held each redraw back after a press.
 async function readSettings($: any): Promise<Settings> {
   let root: string
   try { root = await $.session.root() } catch { return settingsFrom({ autoship: null, cheap: null, local: null, state: null }) }
+  const [locations, autoship, cheap, local, git, usual] = await Promise.all([
+    readText($, root, '.claude/easyclaude.json'),
+    readText($, root, '.claude/autoship.json'),
+    readText($, root, '.claude/cheap-session'),
+    readText($, root, '.claude/settings.local.json'),
+    hasGit($, root),
+    readText($, root, 'docs/STATE.md'),
+  ])
   let statePath = 'docs/STATE.md'
-  try { statePath = JSON.parse((await readText($, root, '.claude/easyclaude.json')) ?? 'null')?.files?.state ?? statePath } catch { /* default */ }
-  return settingsFrom({
-    autoship: await readText($, root, '.claude/autoship.json'),
-    cheap: await readText($, root, '.claude/cheap-session'),
-    local: await readText($, root, '.claude/settings.local.json'),
-    state: await readText($, root, statePath),
-    git: await hasGit($, root),
-  })
+  try { statePath = JSON.parse(locations ?? 'null')?.files?.state ?? statePath } catch { /* default */ }
+  const state = statePath === 'docs/STATE.md' ? usual : await readText($, root, statePath)
+  return settingsFrom({ autoship, cheap, local, state, git })
 }
 
 // The plan file, if the project has one, and whether cheap mode is on: for the /clear note.
@@ -245,7 +319,8 @@ const createRepo = async ($: any) => {
   const now = await $.clock.now()
   if (now - repoAskedAt < 60_000) return
   repoAskedAt = now
-  await say($, CREATE_REPO)
+  // Not awaited, as in press: a message waits while Claude works.
+  void say($, CREATE_REPO)
 }
 // What each setting does, shown under it while the explanations are on.
 const AUTOSHIP_NAME = 'When a task is done'
@@ -281,6 +356,84 @@ const run = async ($: any, command: string, args = '') => {
 const say = async ($: any, text: string) => {
   try { await $.prompt.submit({ text, asUser: true }) } catch (e) { $.ui.toast(`Could not send that: ${String(e)}`) }
 }
+
+// A user pressed a button, saw nothing happen while Claude worked, and pressed it again. So a
+// press says at once what it sent, and whether it waits for the request Claude is on. A
+// second press of the same button does nothing while the first is on its way, or for
+// PRESS_GAP_MS after it: a double click must not send two requests.
+const PRESS_GAP_MS = 3_000
+const NOTE_MS = 6_000
+const inFlight = new Set<string>()
+
+const press = async ($: any, key: string, label: string, work: () => Promise<unknown>) => {
+  if (inFlight.has(key)) return
+  const now = await $.clock.now()
+  const last = await read($, pressed)
+  if (last?.key === key && now - last.at < PRESS_GAP_MS) return
+  inFlight.add(key)
+  const r = await read($, request)
+  await update($, pressed, () => ({ key, label, at: now, isQueued: r !== null && r.endedAt === null }))
+  $.clock.after(NOTE_MS, () => { void update($, pressed, (p) => (p?.at === now ? null : p)) })
+  // Not awaited: Claude Code gives a press 10 seconds, and a command or a message waits while
+  // Claude works. Awaited, the press ran past that, Claude Code dropped it, and the button
+  // seemed to do nothing until it was pressed again.
+  void work().catch(() => undefined).finally(() => inFlight.delete(key))
+}
+
+// --- the update button (update.ts) --------------------------------------------------------
+// Once per load of the module, in the background, when the control panel first draws: the
+// panel never waits on GitHub. The answer is kept for CHECK_EVERY_MS across sessions.
+let updateChecked = false
+const checkForUpdate = async ($: any) => {
+  // Each name written out: the engine lists the variables a module reads from its calls.
+  const off = await Promise.all([$.env.get('DISABLE_UPDATES'), $.env.get('DISABLE_AUTOUPDATER'), $.env.get('CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC')])
+  if (off.some(Boolean)) return
+  let current: string | null = null
+  try { current = JSON.parse(String(await $.fs.read(`${$.plugin.root}/.claude-plugin/plugin.json`)))?.version ?? null } catch { return }
+  if (!current) return
+  const now = await $.clock.now()
+  let known: any = await $.store.get('updateCheck')
+  if (!known || typeof known.at !== 'number' || now - known.at > CHECK_EVERY_MS) {
+    try {
+      const r = await $.http.fetch(RELEASES, { headers: { Accept: 'application/vnd.github+json' } })
+      const found = r.ok ? latestFrom(r.text) : null
+      if (found) { known = { at: now, ...found }; await $.store.set('updateCheck', known) }
+    } catch { /* offline: no button, and the next session asks again */ }
+  }
+  await update($, updateInfo, (u) => ({ ...u, current, latest: known?.version ?? null, url: known?.url ?? null }))
+}
+
+// Runs the update itself, with no turn of Claude's. Each step can take a minute, so it runs
+// in the background; the panel says how it went.
+const runUpdate = async ($: any) => {
+  if ((await read($, updateInfo)).status === 'updating') return
+  await update($, updateInfo, (u) => ({ ...u, status: 'updating' }))
+  void (async () => {
+    let ok = false
+    try {
+      for (const argv of UPDATE_STEPS) {
+        const r = await $.process.run(argv, { timeoutMs: 120_000 }).catch((e: unknown) => {
+          // The plugin's own step decides; a missing companion fails alone.
+          if (argv === PLUGIN_STEP) throw e
+          return null
+        })
+        if (argv === PLUGIN_STEP) ok = r?.exitCode === 0
+      }
+    } catch { ok = false }
+    await update($, updateInfo, (u) => ({ ...u, status: ok ? 'done' : 'failed' }))
+  })()
+}
+
+export const pressedNote = (p: { label: string; isQueued: boolean }): string =>
+  p.isQueued ? `Sent: ${p.label}. It starts when Claude finishes the current request.` : `Sent: ${p.label}.`
+
+// A symbol before each label, from the shapes every terminal font has. The desktop app shows
+// the same ones, so a button looks alike on both.
+const ICONS: Record<string, string> = {
+  continue: '▶', ship: '✓', undo: '↶', filetree: '▤', helpers: '◔', security: '◈', skills: '+', connect: '⇄',
+  compact: '⇊', clear: '↺',
+}
+const withIcon = (key: string, label: string): string => (ICONS[key] ? `${ICONS[key]} ${label}` : label)
 
 // Two queues, so work started without awaiting still lands in order. A request's record is
 // written in the background (see prompt.submit), and a fast first tool call could otherwise
@@ -349,6 +502,7 @@ const recordTool = async ($: any, input: any, result: any) => {
       if (id) steps = [...steps, { id: `task-${id}`, title: input.subject ?? '', doing: input.activeForm || input.subject || '', status: 'pending' }]
     }
     if (input.tool === 'TaskUpdate' && input.taskId) steps = applyTaskUpdate(steps, { ...input, taskId: `task-${input.taskId}` })
+    if (isPlanTool(input.tool) || isWrapUp(input.tool)) steps = applyPlan(steps, input, isWrapUp(input.tool))
     return { ...r, steps, recent: addRecent(r.recent ?? [], actionLabel(input)), tools: r.tools + 1 }
   })
   refreshLater($, false)
@@ -469,10 +623,50 @@ export const register: Register = (on) => {
   on('ui.render', { component: 'Pane', requestId: CONTROLS }, async ($, e) => {
     const table: any = $.ui.resolve(e)
     const { Box, Text, Button, Select } = table
-    const s = await readSettings($)
-    const u = await read($, usage)
-    const help = await read($, controlsHelp)
+    // Read side by side, and the figures fresh: the panel shows how full the conversation is
+    // now, not as it was at the end of the last request.
+    // The split is /context's own `summary` count: estimated here, with no request to the API.
+    const [s, kept, live, help, last, asking, now, split, upd] = await Promise.all([
+      readSettings($), read($, usage), readUsage($), read($, controlsHelp), read($, pressed), read($, clearAsk), $.clock.now(),
+      $.session.usage({ breakdown: 'summary' }).then((x: any) => contextParts(x?.context?.breakdown), () => [] as ContextPart[]),
+      read($, updateInfo),
+    ])
+    if (!updateChecked) { updateChecked = true; void checkForUpdate($).catch(() => undefined) }
+    const { Link } = table
+    const hasUpdate = upd.current !== null && upd.latest !== null && newer(upd.latest, upd.current)
+    // At the top, where an application shows its own update. Gone once it is installed.
+    const updateBox = hasUpdate && (
+      <Box key="update-box" flexDirection="column" borderStyle="round" borderColor={upd.status === 'failed' ? 'error' : upd.status === 'done' ? 'success' : 'suggestion'} paddingX={1}>
+        {upd.status === 'done'
+          ? <Text color="success" wrap="wrap">{`Mellu.mate is updated to ${upd.latest}. Start a new session to use it.`}</Text>
+          : upd.status === 'updating'
+            ? <Text wrap="wrap">{`Updating Mellu.mate to ${upd.latest}...`}</Text>
+            : upd.status === 'failed'
+              ? (
+                <Box flexDirection="column">
+                  <Text color="error" wrap="wrap">The update did not finish.</Text>
+                  <Text color="subtle" wrap="wrap">Claude can run it for you instead. That uses one message.</Text>
+                  <Box><Button key="update-ask" label="Ask Claude to update" onPress={() => press($, 'update-ask', 'Ask Claude to update', () => say($, ASK_CLAUDE))} /></Box>
+                </Box>
+              )
+              : (
+                <Box flexDirection="column">
+                  <Text bold wrap="wrap">{`Mellu.mate ${upd.latest} is out`}</Text>
+                  <Text color="subtle" wrap="wrap">{`You have ${upd.current}. This session keeps working; the new version starts in your next session.`}</Text>
+                  <Box gap={1} alignItems="center">
+                    <Button key="update" variant="primary" label="⇧ Update" onPress={() => runUpdate($)} />
+                    {Link && upd.url && <Link key="update-notes" href={upd.url}>What's new</Link>}
+                  </Box>
+                </Box>
+              )}
+      </Box>
+    )
+    const u = live.contextTokens !== null ? live : kept
     const width = paneWidth(e)
+    const note = last && now - last.at < NOTE_MS ? pressedNote(last) : null
+    // A button that sends Claude a message, and one that runs a command.
+    const ask = (key: string, label: string, text: string) => () => press($, key, label, () => say($, text))
+    const command = (key: string, label: string, name: string, args = '') => () => press($, key, label, () => run($, name, args))
     // A setting's row: its name on the left, its control on the right. With the explanations
     // on, what it does goes under the name.
     const row = (key: string, name: string, note: string | null, control: any) => (
@@ -496,13 +690,16 @@ export const register: Register = (on) => {
     // what it does beside it, or under it in a narrow pane, so the line is never cut short.
     const wide = width >= 56
     type Action = { key: string; label: string; note: string; onPress: () => void; primary?: boolean }
+    const button = (a: Action) => (
+      <Button key={a.key} label={withIcon(a.key, a.label)} variant={a.primary ? 'primary' : 'secondary'} onPress={a.onPress} />
+    )
     const group = (actions: Action[]) => help
       ? (
         <Box flexDirection="column" gap={wide ? 0 : 1}>
           {actions.map((a) => (
             <Box key={`${a.key}-row`} flexDirection={wide ? 'row' : 'column'} alignItems={wide ? 'center' : 'flex-start'} gap={wide ? 1 : 0}>
               <Box width={wide ? ACTION_COLUMNS : undefined} flexShrink={0}>
-                <Button key={a.key} label={a.label} variant={a.primary ? 'primary' : 'secondary'} onPress={a.onPress} />
+                {button(a)}
               </Box>
               <Box flexShrink={1}>
                 <Text color="subtle" wrap="wrap">{a.note}</Text>
@@ -513,54 +710,121 @@ export const register: Register = (on) => {
       )
       : (
         <Box flexDirection="row" flexWrap="wrap" gap={1}>
-          {actions.map((a) => <Button key={a.key} label={a.label} variant={a.primary ? 'primary' : 'secondary'} onPress={a.onPress} />)}
+          {actions.map(button)}
         </Box>
       )
     const level = !s.git
       ? <Button key="create-repo" label="Turn on versions" onPress={() => createRepo($)} />
       : Select
-        ? <Select key="autoship" options={LEVEL_OPTIONS} value={s.autoship} onSelect={(v: string) => run($, 'mellu:autoship', v)} />
+        ? <Select key="autoship" options={LEVEL_OPTIONS} value={s.autoship}
+            onSelect={(v: string) => press($, 'autoship', `${AUTOSHIP_NAME}: ${LEVEL_LABELS[v] ?? v}`, () => run($, 'mellu:autoship', v))} />
         : <Box gap={1}>{LEVELS.map((l) => (
-            <Button key={`autoship-${l}`} label={LEVEL_LABELS[l] ?? l} variant={l === s.autoship ? 'primary' : 'secondary'} onPress={() => run($, 'mellu:autoship', l)} />
+            <Button key={`autoship-${l}`} label={LEVEL_LABELS[l] ?? l} variant={l === s.autoship ? 'primary' : 'secondary'}
+              onPress={command(`autoship-${l}`, `${AUTOSHIP_NAME}: ${LEVEL_LABELS[l] ?? l}`, 'mellu:autoship', l)} />
           ))}</Box>
+    // How full the conversation is, and the two ways to make it smaller. Claude Code moved this
+    // figure into a menu, and a beginner did not find it there.
+    const percent = u.contextPercent ?? (u.contextTokens !== null && u.contextWindow ? Math.round((u.contextTokens / u.contextWindow) * 100) : null)
+    const fill = percent === null ? 'subtle' : percent >= 80 ? 'error' : percent >= 50 ? 'warning' : 'success'
+    // With the split, the bar is drawn in each part's colour, as /context draws its grid.
+    const cells = Math.max(10, width - 4)
+    // Each part is a coloured Box that grows by its share of the row, and free space by the
+    // rest. Blocks of text ran past the pane in the desktop app, twice: its font draws them at
+    // another width than the pane's column count assumes. Shares of the row fit any font. (A
+    // width like "19.53%" was refused, and the whole panel went blank.)
+    const free = Math.max(0, 100 - split.reduce((n, p) => n + p.percent, 0))
+    const bar = split.length
+      ? (
+        <Box key="context-bar" flexDirection="row" width="100%" height={1} overflow="hidden">
+          {split.map((p) => <Box key={`bar-${p.name}`} width={0} flexGrow={p.percent} height={1} backgroundColor={p.color} />)}
+          {free > 0 && <Box key="bar-free" width={0} flexGrow={free} height={1} backgroundColor="inactive" />}
+        </Box>
+      )
+      : <Text color={fill} wrap="truncate">{contextBar(percent, cells)}</Text>
+    const legend = split.length > 0 && (
+      <Box key="context-parts" flexDirection="row" flexWrap="wrap" columnGap={2}>
+        {split.map((p) => (
+          <Box key={`part-${p.name}`} gap={1}>
+            <Text color={p.color}>■</Text>
+            <Text color="subtle">{`${p.name} ${share(p.percent)}`}</Text>
+          </Box>
+        ))}
+      </Box>
+    )
+    const conversation = (
+      <Box key="conversation" flexDirection="column">
+        <Box justifyContent="space-between" gap={1}>
+          <Text>Conversation</Text>
+          <Text color="subtle" wrap="truncate">
+            {percent === null ? 'size not known yet' : `${Math.round(percent)}% full · ${tokens(u.contextTokens)} of ${tokens(u.contextWindow)}`}
+          </Text>
+        </Box>
+        {bar}
+        {legend}
+        {asking
+          ? (
+            <Box flexDirection="column" borderStyle="round" borderColor="warning" paddingX={1}>
+              <Text bold wrap="wrap">Start a fresh conversation?</Text>
+              <Text color="subtle" wrap="wrap">Claude forgets this chat. Your files and your plan stay.</Text>
+              <Box gap={1}>
+                <Button key="clear-yes" variant="primary" label="Yes, clear"
+                  onPress={() => { void update($, clearAsk, () => false); void press($, 'clear', 'Clear', () => run($, 'clear')) }} />
+                <Button key="clear-no" label="Cancel" onPress={() => update($, clearAsk, () => false)} />
+              </Box>
+            </Box>
+          )
+          : group([
+            { key: 'compact', label: 'Compact', note: 'Shortens the conversation to a summary. Claude keeps the gist',
+              onPress: command('compact', 'Compact', 'compact') },
+            { key: 'clear', label: 'Clear', note: 'Starts a fresh conversation. Asks you first',
+              onPress: () => update($, clearAsk, () => true) },
+          ])}
+      </Box>
+    )
     return (
       <Box flexDirection="column" paddingX={1} gap={1}>
+        {updateBox}
+        {note && <Text key="pressed-note" color="success" wrap="wrap">{note}</Text>}
         {!s.setUp && (
           <Box flexDirection="column" borderStyle="round" borderColor="suggestion" paddingX={1}>
             <Text bold>Set up this project</Text>
             <Text color="subtle" wrap="wrap">Mellu.mate then remembers it between sessions and runs its checks after each change.</Text>
-            <Box><Button key="setup" variant="primary" label="Set up" onPress={() => run($, 'mellu:start')} /></Box>
+            <Box><Button key="setup" variant="primary" label="Set up" onPress={command('setup', 'Set up', 'mellu:start')} /></Box>
           </Box>
         )}
         {group([
-          { key: 'continue', label: 'Build next step', primary: s.setUp, onPress: () => say($, 'keep going'),
+          { key: 'continue', label: 'Build next step', primary: s.setUp, onPress: ask('continue', 'Build next step', 'keep going'),
             note: s.setUp ? 'Builds the next task in your plan' : 'Carries on with what Claude was doing' },
-          { key: 'ship', label: 'Save a version', note: SAVE_NOTE(s.autoship, s.git), onPress: () => say($, 'ship it') },
+          { key: 'ship', label: 'Save a version', note: SAVE_NOTE(s.autoship, s.git), onPress: ask('ship', 'Save a version', 'ship it') },
           { key: 'undo', label: 'Undo last change', note: 'Shows what it would undo, then asks you',
-            onPress: () => say($, 'I want to undo the last change. Tell me what you would restore before you change anything.') },
+            onPress: ask('undo', 'Undo last change', 'I want to undo the last change. Tell me what you would restore before you change anything.') },
         ])}
         <Box flexDirection="column" gap={help ? 1 : 0}>
           {/* With no git, the row says so even when short: the button alone does not say why. */}
           {row('autoship-row', AUTOSHIP_NAME, !s.git ? NO_GIT_NOTE : help ? AUTOSHIP_HELP : null, level)}
           {help && !s.git && <Text color="subtle" wrap="wrap">{NO_GIT_HELP}</Text>}
           {row('cheap-row', 'Cheap mode', help ? `${CHEAP_NOTE}. ${CHEAP_HELP}` : null, toggle(s.cheap, 'cheap-on', 'cheap-off',
-            () => run($, 'mellu:cheap-session'), () => run($, 'mellu:full')))}
+            command('cheap-on', 'Cheap mode on', 'mellu:cheap-session'), command('cheap-off', 'Cheap mode off', 'mellu:full')))}
           {row('plain-row', 'Plain answers', help ? `${PLAIN_NOTE}. ${PLAIN_HELP}` : null, toggle(s.plain, 'plain', 'plain',
-            () => run($, 'mellu:plain', 'on'), () => run($, 'mellu:plain', 'off')))}
+            command('plain', 'Plain answers on', 'mellu:plain', 'on'), command('plain', 'Plain answers off', 'mellu:plain', 'off')))}
         </Box>
         {group([
-          { key: 'filetree', label: 'Project files', note: 'A list of your files beside the chat. Changes nothing', onPress: () => run($, 'filetree') },
+          { key: 'filetree', label: 'Project files', note: 'A list of your files beside the chat. Changes nothing',
+            onPress: command('filetree', 'Project files', 'filetree') },
           { key: 'helpers', label: 'Progress', note: 'Each step of your request, what Claude did, and its helpers. Changes nothing',
-            onPress: () => run($, 'mellu-helpers') },
+            onPress: command('helpers', 'Progress', 'mellu-helpers') },
           { key: 'security', label: 'Check security', note: 'Looks for leaked passwords and keys. Changes nothing',
-            onPress: () => run($, 'mellu:security-check') },
-          { key: 'skills', label: 'Find skills', note: 'Suggests add-ons. Installs only the ones you pick', onPress: () => run($, 'mellu:skills') },
+            onPress: command('security', 'Check security', 'mellu:security-check') },
+          { key: 'skills', label: 'Find skills', note: 'Suggests add-ons. Installs only the ones you pick',
+            onPress: command('skills', 'Find skills', 'mellu:skills') },
           { key: 'connect', label: 'Connect services', note: 'Advanced: links outside services with an API key',
-            onPress: () => run($, 'mellu:connect') },
+            onPress: command('connect', 'Connect services', 'mellu:connect') },
         ])}
+        {/* Under the controls, above the line, as the user asked. */}
+        {conversation}
         <Text color="promptBorder" wrap="truncate">{RULE}</Text>
         <Box justifyContent="space-between" alignItems="center" gap={1}>
-          <Text color="subtle" wrap="truncate">Session {money(u.costUsd)} · {tokens(u.contextTokens)} of {tokens(u.contextWindow)}</Text>
+          <Text color="subtle" wrap="truncate">Session {money(u.costUsd)}</Text>
           <Button key="controls-help" plain label={help ? 'Hide explanations' : 'What do these do?'}
             onPress={() => update($, controlsHelp, (shown) => !shown)} />
         </Box>

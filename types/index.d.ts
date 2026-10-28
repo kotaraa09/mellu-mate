@@ -1,8 +1,8 @@
 // What Mellu.mate's hooks module keeps in the session's $.state, so `claude plugin validate`
 // can hold every key it names to a declared type.
 
-// One step of the request in progress, from Claude's own step list (TodoWrite or the Task
-// tools).
+// One step of the request in progress, from Claude's own step list (TodoWrite, the Task
+// tools, or the desktop app's task list).
 export type Step = {
   id: string
   title: string
@@ -43,6 +43,26 @@ export type Usage = {
   contextTokens: number | null
   contextWindow: number | null
   contextPercent: number | null
+}
+
+// A newer release of Mellu.mate, as the control panel offers it. Claude is never asked: the
+// panel checks GitHub's latest release itself, and the user presses Update or does not.
+export type UpdateInfo = {
+  // The installed version, from the plugin's own plugin.json; null until read.
+  current: string | null
+  // The latest published release and its page, or null when unknown.
+  latest: string | null
+  url: string | null
+  status: 'idle' | 'updating' | 'done' | 'failed'
+}
+
+export type Pressed = {
+  key: string
+  label: string
+  // When it was pressed, so the note goes away after a few seconds.
+  at: number
+  // Claude was working on a request: the new one waits until that ends.
+  isQueued: boolean
 }
 
 // --- hooks/savvy-progress: the helpers (subagents) of the session, for the Agents panel. ---
@@ -86,6 +106,13 @@ declare module 'claude-code' {
       agentsNow: number
       // The control panel shows what each control does under it, until it is turned off.
       controlsHelp: boolean
+      // The control panel button pressed last, until its request is on its way: the panel
+      // says so at once, and a second press of it does nothing. Null when none is.
+      pressed: Pressed | null
+      // Whether the control panel asks "Start a fresh conversation?" before /clear.
+      clearAsk: boolean
+      // A newer release, and how its update went.
+      update: UpdateInfo
     }
   }
 }
