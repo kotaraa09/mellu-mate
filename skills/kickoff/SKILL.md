@@ -28,13 +28,16 @@ tell the user in one plain line where their project notes will live, and why.
 **Check the tools.** The session opener sends a line that starts "Tools check:", and says there
 what this computer is missing. If it sent none, the opener never ran, which almost always means
 Node.js is not installed. Then run `node --version` and `git --version`. For each that fails, tell
-the user in plain words what they lose and the fix, in their language:
+the user in plain words what they lose, in their language, and offer to install it for them:
 
 - Node.js runs Mellu.mate's memory between sessions and its checks after each change. Without it,
-  neither happens. The fix: install the LTS version from https://nodejs.org, then reopen Claude.
-- Git keeps the saved versions that "go back to yesterday" needs. The fix: https://git-scm.com.
+  neither happens. Windows: `winget install --id OpenJS.NodeJS.LTS -e`. Elsewhere: the LTS
+  installer from https://nodejs.org.
+- Git keeps the saved versions that "go back to yesterday" needs. Windows: `winget install --id
+  Git.Git -e`. Mac: `xcode-select --install`. Linux: the system's package manager.
 
-Then carry on with setup. The files it writes start working once the tool is installed.
+Run an install only after a clear yes. Then carry on with setup, and tell the user to reopen
+Claude when it is done: the files it writes start working once the tool is installed.
 
 ## 2. Interview — in the question form, until the user says start
 

@@ -91,13 +91,13 @@ The same request, in the same small sample shop, three runs with Mellu.mate and 
 
 ## Install
 
-You need **Claude Code** (the [desktop app](https://claude.ai/download) or the terminal), **[Node.js](https://nodejs.org)** (LTS) and **[Git](https://git-scm.com/downloads)**. A GitHub account is not needed.
+You need **Claude Code** (the [desktop app](https://claude.ai/download) or the terminal). Mellu.mate also runs on **[Node.js](https://nodejs.org)** (LTS) and **[Git](https://git-scm.com/downloads)**. If either is missing, Claude offers to install it for you, and installs it only after you say yes. A GitHub account is not needed.
 
 **The easy way: ask Claude.** Open Claude Code in any folder and paste this:
 
 ```
-Install the Mellu.mate plugin for Claude Code. Check that Node.js and Git are installed,
-and tell me in plain words how to get anything missing. Then run:
+Install the Mellu.mate plugin for Claude Code. Check that Node.js and Git are installed.
+If one is missing, tell me in plain words, and install it after I say yes. Then run:
 claude plugin install mellu --marketplace kotaraa09/mellu-mate
 claude plugin install filetree@mellu-mate
 claude plugin install blast-radius@mellu-mate
@@ -222,7 +222,7 @@ Without it, Claude asks "should I commit?", then "should I push?", then "should 
 
 <br>
 
-Node.js is almost certainly missing. Mellu.mate runs on it, and without it a session opens as plain Claude Code. Install the LTS version from [nodejs.org](https://nodejs.org), restart Claude, and type `/mellu:start` if setup still does not begin.
+Node.js is almost certainly missing. Mellu.mate runs on it, and without it a session opens as plain Claude Code. Where Claude Code shows plugin panels, Claude notices this and offers to install it for you. Otherwise, ask Claude "install Node.js for me", or install the LTS version from [nodejs.org](https://nodejs.org). Then restart Claude, and type `/mellu:start` if setup still does not begin.
 
 </details>
 

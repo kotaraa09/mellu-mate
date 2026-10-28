@@ -91,13 +91,13 @@
 
 ## ติดตั้ง
 
-ต้องมี **Claude Code** ([แอปเดสก์ท็อป](https://claude.ai/download) หรือในเทอร์มินัล) **[Node.js](https://nodejs.org)** (รุ่น LTS) และ **[Git](https://git-scm.com/downloads)** ไม่ต้องมีบัญชี GitHub
+ต้องมี **Claude Code** ([แอปเดสก์ท็อป](https://claude.ai/download) หรือในเทอร์มินัล) Mellu.mate ยังทำงานบน **[Node.js](https://nodejs.org)** (รุ่น LTS) และ **[Git](https://git-scm.com/downloads)** ถ้ายังไม่มีตัวไหน Claude จะเสนอติดตั้งให้ และจะติดตั้งหลังจากคุณตอบตกลงเท่านั้น ไม่ต้องมีบัญชี GitHub
 
 **วิธีที่ง่ายที่สุด: ให้ Claude ติดตั้งให้** เปิด Claude Code ในโฟลเดอร์ไหนก็ได้ แล้ววางข้อความนี้
 
 ```
 ช่วยติดตั้งปลั๊กอิน Mellu.mate ของ Claude Code ให้หน่อย ตรวจว่ามี Node.js กับ Git ไหม
-ถ้าขาดอะไรให้บอกวิธีติดตั้งเป็นภาษาง่าย ๆ จากนั้นรัน
+ถ้าขาดตัวไหนให้บอกเป็นภาษาง่าย ๆ แล้วติดตั้งให้หลังจากฉันตอบตกลง จากนั้นรัน
 claude plugin install mellu --marketplace kotaraa09/mellu-mate
 claude plugin install filetree@mellu-mate
 claude plugin install blast-radius@mellu-mate
@@ -222,7 +222,7 @@ Claude สร้างของพวกนี้เองไม่ได้ `/m
 
 <br>
 
-เกือบแน่นอนว่ายังไม่มี Node.js Mellu.mate ทำงานบนตัวนี้ ถ้าไม่มี เซสชันจะเปิดเป็น Claude Code ธรรมดา ให้ติดตั้งรุ่น LTS จาก [nodejs.org](https://nodejs.org) เปิด Claude ใหม่ และพิมพ์ `/mellu:start` ถ้าการตั้งค่ายังไม่เริ่ม
+เกือบแน่นอนว่ายังไม่มี Node.js Mellu.mate ทำงานบนตัวนี้ ถ้าไม่มี เซสชันจะเปิดเป็น Claude Code ธรรมดา ถ้า Claude Code แสดงแผงของปลั๊กอินได้ Claude จะเห็นเองและเสนอติดตั้งให้ ถ้าไม่ ให้บอก Claude ว่า "ช่วยติดตั้ง Node.js ให้หน่อย" หรือติดตั้งรุ่น LTS จาก [nodejs.org](https://nodejs.org) เอง จากนั้นเปิด Claude ใหม่ และพิมพ์ `/mellu:start` ถ้าการตั้งค่ายังไม่เริ่ม
 
 </details>
 
