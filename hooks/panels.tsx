@@ -51,6 +51,8 @@ export function contextParts(b: { rawMaxTokens?: number; categories?: ReadonlyAr
   return (b?.categories ?? [])
     .filter((c) => c.kind === 'used' && c.tokens > 0)
     .map((c) => ({ name: c.name, tokens: c.tokens, percent: (c.tokens / window) * 100, color: c.color }))
+    // The largest first: the user looked for it at the start, and found it last.
+    .sort((a, b) => b.tokens - a.tokens)
 }
 
 // A share as /context prints it: a whole number, and under 1% as such.
@@ -650,10 +652,12 @@ export const register: Register = (on) => {
       ? (() => {
         const sized = split.map((p) => ({ ...p, cells: Math.round((p.percent / 100) * cells) }))
         const used = Math.min(cells, sized.reduce((n, p) => n + p.cells, 0))
+        // Free space is the same block in grey: the desktop app drew '░' wider than '█', and
+        // the bar ran past the pane onto a second line. One line, clipped, whatever the font.
         return (
-          <Box key="context-bar" flexDirection="row">
+          <Box key="context-bar" flexDirection="row" flexWrap="nowrap" height={1} overflow="hidden">
             {sized.filter((p) => p.cells > 0).map((p) => <Text key={`bar-${p.name}`} color={p.color}>{'█'.repeat(p.cells)}</Text>)}
-            <Text key="bar-free" color="subtle">{'░'.repeat(cells - used)}</Text>
+            <Text key="bar-free" color="inactive" dimColor>{'█'.repeat(cells - used)}</Text>
           </Box>
         )
       })()
@@ -736,9 +740,9 @@ export const register: Register = (on) => {
           { key: 'connect', label: 'Connect services', note: 'Advanced: links outside services with an API key',
             onPress: command('connect', 'Connect services', 'mellu:connect') },
         ])}
-        <Text color="promptBorder" wrap="truncate">{RULE}</Text>
-        {/* At the bottom, as the user asked: the figures under the controls. */}
+        {/* Under the controls, above the line, as the user asked. */}
         {conversation}
+        <Text color="promptBorder" wrap="truncate">{RULE}</Text>
         <Box justifyContent="space-between" alignItems="center" gap={1}>
           <Text color="subtle" wrap="truncate">Session {money(u.costUsd)}</Text>
           <Button key="controls-help" plain label={help ? 'Hide explanations' : 'What do these do?'}

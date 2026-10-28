@@ -3,7 +3,7 @@
 import { describe, expect, mock, test } from 'claude-code/testing'
 import type { On } from 'claude-code'
 
-import { actionLabel, addRecent, applyPlan, applyTaskUpdate, continuesRequest, contextBar, isPlanTool, fromTodos, isDevServer, money, requestTitle, settingsFrom, stepLine, waitingOn } from './panels'
+import { actionLabel, addRecent, applyPlan, applyTaskUpdate, continuesRequest, contextBar, contextParts, isPlanTool, fromTodos, isDevServer, money, requestTitle, settingsFrom, stepLine, waitingOn } from './panels'
 import { ADVICE_LIMIT, afterStep, afterTurn, freshGuard, holdText, shouldHold } from './clear-reminder'
 import { costumeOf, flowOf, label, side } from './savvy-progress/register'
 import type { Request, Step } from '../types'
@@ -570,6 +570,8 @@ describe('the panels, drawn', () => {
       await clock.advance(10_000)
     }
     expect(ran).toEqual(['compact', 'clear', 'compact', 'clear'])
+    // The largest part comes first, in the bar and in the list under it.
+    expect(contextParts(breakdown).map((p) => p.name)).toEqual(['Messages', 'System prompt', 'System tools'])
     expect(contextBar(25, 8)).toBe('██░░░░░░')
     expect(contextBar(null, 4)).toBe('░░░░')
   })
