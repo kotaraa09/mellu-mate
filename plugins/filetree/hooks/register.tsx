@@ -27,6 +27,7 @@ import {
   rollCounts,
   replaceChildren,
   rollUp,
+  shownAs,
   stamp,
   toNodes,
   underAny,
@@ -75,7 +76,7 @@ let lastPress = { key: '', at: 0 }
 let noNerd = false
 let glyphSetting = 'auto'
 let follow = true
-let followClaude = true
+let followClaude = false
 let scanning: Promise<void> | null = null
 let scanJobs: Job[] = []
 let gitRun: Promise<void> | null = null
@@ -473,6 +474,16 @@ async function flash($: EngineInterface, tones: Record<string, string>): Promise
       if (id === BRANCH_ROW) continue
       const chain = ancestorsOf(id, cur.root)
       if (!chain.some(a => !open.has(a))) continue
+      // Mellu.mate: with Follow Claude off, the tree stays as the person left it. Opening the
+      // folders of every file Claude touched read as the tree zooming in on each edit, so the
+      // closed folder that holds the file lights up instead.
+      if (!followClaude) {
+        const row = shownAs(id, cur.root, open)
+        bright.delete(id)
+        bright.add(row)
+        all[row] = all[row] ?? tone
+        continue
+      }
       for (const a of chain) {
         if (!open.has(a)) {
           dim.add(a)
@@ -969,7 +980,8 @@ export const register: Register = (on, options) => {
   const activity = typeof options?.activity === 'string' ? options.activity : 'reads and writes'
   showReads = activity.includes('reads')
   showWrites = activity.includes('writes')
-  followClaude = options?.follow !== 'off'
+  // Mellu.mate: off unless set, as in plugin.json.
+  followClaude = options?.follow === 'on'
   sizeDefault = options?.column === 'size'
   on('session.start', async ($, e, next) => {
     await $.command.register({ name: 'filetree', description: 'Show the file tree; args: [path] (no path = cwd)' })

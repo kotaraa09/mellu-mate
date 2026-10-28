@@ -1,6 +1,6 @@
 {
   "name": "filetree",
-  "version": "0.2.25",
+  "version": "0.2.26",
   "description": "An IDE-style file tree for Claude Code that shows what Claude is doing and where in files",
   "types": "./types/index.d.ts",
   "author": {
@@ -40,8 +40,8 @@
     "follow": {
       "type": "string",
       "title": "Follow Claude",
-      "description": "on: the tree scrolls to what Claude reads, writes or commits. off: the view stays where you put it and only your own scrolling moves it; highlights still show.",
-      "default": "on",
+      "description": "on: the tree opens folders and scrolls to what Claude reads, writes or commits. off: the tree stays as you left it, and the folder that holds a changed file lights up.",
+      "default": "off",
       "options": [
         "on",
         "off"

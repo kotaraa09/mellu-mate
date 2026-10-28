@@ -33,6 +33,12 @@ the Claude desktop app. It checked the terminal's layout (fullscreen, 110 column
 desktop app places the pane beside the conversation whatever that layout is. The two checks
 now apply when the session draws on no desktop surface.
 
+Changed by Mellu.mate in 0.2.26, marked with comments in `hooks/register.tsx` and `hooks/tree.ts`:
+Follow Claude is off unless set, and with it off a file Claude touches inside a closed folder
+no longer opens that folder. The closed folder lights up instead (`shownAs`, tested in
+`hooks/tree.test.ts`). Users read the folders opening on each edit as the tree zooming in.
+Upstream at 0.5.2 (`6bc23f6`, checked 2026-10-28) still opens them, with Follow Claude on or off.
+
 Added by Mellu.mate: the changes under the tree. A click on a changed file, or `d` on the
 cursor's file, shows its changes since the last save to git (`git diff HEAD`) in the lower
 half of the same pane, drawn by the engine's `Code` element, with arrows to step through the

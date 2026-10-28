@@ -3,7 +3,7 @@
 import { describe, expect, mock, test } from 'claude-code/testing'
 import type { On } from 'claude-code'
 
-import { actionLabel, addRecent, applyTaskUpdate, continuesRequest, fromTodos, isDevServer, money, requestTitle, settingsFrom, stepLine, waitingOn } from './panels'
+import { actionLabel, addRecent, applyPlan, applyTaskUpdate, continuesRequest, contextBar, isPlanTool, fromTodos, isDevServer, money, requestTitle, settingsFrom, stepLine, waitingOn } from './panels'
 import { ADVICE_LIMIT, afterStep, afterTurn, freshGuard, holdText, shouldHold } from './clear-reminder'
 import { costumeOf, flowOf, label, side } from './savvy-progress/register'
 import type { Request, Step } from '../types'
@@ -63,6 +63,25 @@ describe('the step line', () => {
     steps = applyTaskUpdate(steps, { taskId: '1', status: 'in_progress' })
     expect(stepLine(steps)).toBe('Step 1 of 1: Setting up')
     expect(applyTaskUpdate(steps, { taskId: '1', status: 'deleted' })).toEqual([])
+  })
+
+  // The Claude desktop app gives Claude its own task list, and Claude keeps it there instead
+  // of TodoWrite: the bar showed only "Working" in the desktop app.
+  test('follows the desktop app task list: a whole list, advance, done and start, and wrap up', async () => {
+    let steps = applyPlan([], { items: [
+      { content: 'Read the code', status: 'in_progress' },
+      { content: 'Fix the bug', status: 'pending' },
+      { content: 'Run the tests', status: 'pending' },
+    ] })
+    expect(stepLine(steps)).toBe('Step 1 of 3: Read the code')
+    steps = applyPlan(steps, { advance: true })
+    expect(stepLine(steps)).toBe('Step 2 of 3: Fix the bug')
+    steps = applyPlan(steps, { done: [2], start: 3 })
+    expect(stepLine(steps)).toBe('Step 3 of 3: Run the tests')
+    expect(stepLine(applyPlan(steps, {}, true))).toBe('All 3 steps done')
+    expect(isPlanTool('mcp__ccd_turn__update_plan')).toBe(true)
+    expect(isPlanTool('mcp__other__update_plan')).toBe(false)
+    expect(actionLabel({ tool: 'mcp__ccd_turn__update_plan', advance: true })).toBe(null)
   })
 
   test('says a tiny cost plainly, and an unknown one as a dash', async () => {
@@ -303,6 +322,20 @@ describe('the panels, drawn', () => {
     await done.unmount()
   })
 
+  test('the bar counts the steps of the desktop app task list', async ($, on) => {
+    project(on, {})
+    on('prompt.submit', async (_$, e: any) => ({ text: e.text }) as any)
+    on('tool.call', async () => ({ result: {} }) as any)
+    await $.prompt.submit({ text: 'tidy the menu' } as any)
+    await $.tool.call({ tool: 'mcp__ccd_turn__update_plan', items: [
+      { content: 'Read the menu', status: 'in_progress' }, { content: 'Tidy it', status: 'pending' },
+    ] } as any)
+    await $.tool.call({ tool: 'mcp__ccd_turn__update_plan', advance: true } as any)
+    const ui = await $.ui.mount({ plugin: 'mellu', surface: 'terminal', ...band() })
+    expect(await ui.find({ type: 'Text', text: '1/2 steps' })).toBeDefined()
+    await ui.unmount()
+  })
+
   test('the bar always has a Details button, and the progress panel lists the steps', async ($, on) => {
     project(on, {})
     on('prompt.submit', async (_$, e: any) => ({ text: e.text }) as any)
@@ -430,7 +463,7 @@ describe('the panels, drawn', () => {
   })
 
   test('a control panel button runs the command it names', async ($, on) => {
-    project(on, { 'docs/STATE.md': '# State\n', '.claude/autoship.json': JSON.stringify({ enabled: true, through: 'commit' }) })
+    const clock = project(on, { 'docs/STATE.md': '# State\n', '.claude/autoship.json': JSON.stringify({ enabled: true, through: 'commit' }) })
     const ran: string[] = []
     on('command.run', async (_$, e) => {
       ran.push(`${e.command} ${e.args}`.trim())
@@ -441,6 +474,8 @@ describe('the panels, drawn', () => {
       await ui.select({ key: 'autoship', value: 'pr' })
       await ui.press({ key: 'skills' })
       await ui.unmount()
+      // A second press of a button within a few seconds is taken as a double click.
+      await clock.advance(10_000)
     }
     expect(ran).toEqual(['mellu:autoship pr', 'mellu:skills', 'mellu:autoship pr', 'mellu:skills'])
   })
@@ -463,6 +498,58 @@ describe('the panels, drawn', () => {
     expect(await ui.find({ key: 'setup' })).toBeDefined()
     expect(await ui.find({ key: 'create-repo' })).toBeUndefined()
     await ui.unmount()
+  })
+
+  // A user pressed a button, saw nothing happen, and pressed it again: the panel must answer
+  // at once, and a second press must not send the request twice.
+  test('a pressed button says so at once, and a second press sends nothing more', async ($, on) => {
+    project(on, { 'docs/STATE.md': '# State\n' })
+    const sent: string[] = []
+    on('prompt.submit', async (_$, e: any) => { sent.push(e.text); return { text: e.text } as any })
+    const ui = await $.ui.mount({ plugin: 'mellu', surface: 'terminal', ...pane('mellu-controls') })
+    expect(await ui.find({ key: 'continue' })).toBeDefined()
+    await ui.press({ key: 'continue' })
+    await ui.press({ key: 'continue' })
+    expect(sent).toEqual(['keep going'])
+    expect(await ui.find({ type: 'Text', text: /Sent: Build next step/ })).toBeDefined()
+    await ui.unmount()
+  })
+
+  test('a button pressed while Claude works says the request waits its turn', async ($, on) => {
+    project(on, { 'docs/STATE.md': '# State\n' })
+    on('prompt.submit', async (_$, e: any) => ({ text: e.text }) as any)
+    on('tool.call', async () => ({ result: {} }) as any)
+    await $.prompt.submit({ text: 'make the logo bigger' } as any)
+    await $.tool.call({ tool: 'Read', file_path: '/p/index.html' } as any)
+    const ui = await $.ui.mount({ plugin: 'mellu', surface: 'terminal', ...pane('mellu-controls') })
+    await ui.press({ key: 'ship' })
+    expect(await ui.find({ type: 'Text', text: /starts when Claude finishes/ })).toBeDefined()
+    await ui.unmount()
+  })
+
+  test('the conversation row shows how full it is, compacts at once, and clears only after a yes', async ($, on) => {
+    const clock = project(on, { 'docs/STATE.md': '# State\n' })
+    const ran: string[] = []
+    on('command.run', async (_$, e) => { ran.push(e.command); return { text: '' } })
+    // The panel reads the session's figures as it draws: 50k of 200k here.
+    for (const surface of SURFACES) {
+      const ui = await $.ui.mount({ plugin: 'mellu', surface, ...pane('mellu-controls') })
+      expect(await ui.find({ type: 'Text', text: /25% full/ })).toBeDefined()
+      await ui.press({ key: 'compact' })
+      const before = ran.length
+      await ui.press({ key: 'clear' })
+      expect(ran.length).toBe(before)
+      expect(await ui.find({ type: 'Text', text: /Start a fresh conversation\?/ })).toBeDefined()
+      await ui.press({ key: 'clear-no' })
+      expect(await ui.find({ type: 'Text', text: /Start a fresh conversation\?/ })).toBeUndefined()
+      await ui.press({ key: 'clear' })
+      await ui.press({ key: 'clear-yes' })
+      await ui.unmount()
+      await clock.advance(10_000)
+    }
+    expect(ran).toEqual(['compact', 'clear', 'compact', 'clear'])
+    expect(contextBar(25, 8)).toBe('██░░░░░░')
+    expect(contextBar(null, 4)).toBe('░░░░')
   })
 
   test('with no git, the level is a Create repo button that asks Claude to start one', async ($, on) => {
