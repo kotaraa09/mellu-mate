@@ -135,7 +135,7 @@ export async function gradeWorkspace(caseDir, workspace) {
         cpSync(join(caseDir, c.hidden), target);
         const r = await runTests(copy, [target], c.only);
         // A name that matches no test passes nothing: node --test still exits 0 then.
-        const ran = !c.only || /# pass [1-9]/.test(r.out);
+        const ran = !c.only || /# (pass|fail) [1-9]/.test(r.out);
         results.push({ name: c.name, passed: r.passed && ran, why: ran ? r.out : `no test named ${c.only}` });
       } else if (c.ownTests) {
         const tests = files.filter(isTestFile);

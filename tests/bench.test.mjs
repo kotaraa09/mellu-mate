@@ -589,6 +589,7 @@ const failedRules = (checks) => checks.filter((c) => !c.passed && c.name.startsW
 test('bench: character-rules counts each rule on its own', async () => {
   const untouched = await gradeRules();
   assert(failedRules(untouched).length === 25, `the starter code should fail all 25 rules, failed ${failedRules(untouched).length}`);
+  assert(!untouched.some((c) => /no test named/.test(c.why)), 'a rule test that ran and failed should not read as missing');
   allPass('a creator that follows every rule', await gradeRules((dir) => writeFileSync(join(dir, 'src', 'character.js'), answer)));
   // Rule 19 left out: a subclass is taken at any level.
   const early = answer.replace("if (c.subclass != null) fail('subclass too early');", '');
