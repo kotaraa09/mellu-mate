@@ -12,8 +12,11 @@
 //
 // Claude Code takes one hook per event from a plugin, so session.start, prompt.submit and
 // turn.complete are hooked in panels.tsx, and turn.step in savvy-progress/, which call the
-// functions below. This file hooks only the events nothing else in Mellu.mate does.
+// functions below. This file hooks only the events nothing else in Mellu.mate does, so its
+// classic.SessionStart also runs the tools check (tools-check.ts).
 import type { Register } from 'claude-code'
+
+import { type Os, toolsNote } from './tools-check'
 
 // History, in tokens, beyond what a fresh conversation carries. Same figure as
 // prompt-check.mjs used for its advice.
@@ -106,7 +109,23 @@ export const clearHeld = () => { g = { ...g, heldAt: g.ctx } }
 
 export const register: Register = (on) => {
   on('classic.SessionStart', async ($, e, next) => {
-    const r = await next(e)
+    let r = await next(e)
+    if (e.source === 'startup') {
+      // The tools check (tools-check.ts): a program that cannot start makes run() reject.
+      const has = (cmd: string) => $.process.run([cmd, '--version'], { timeoutMs: 10_000 })
+        .then((p) => p.exitCode === 0, () => false)
+      const os = async (): Promise<Os> => {
+        if ((await $.env.get('OS')) === 'Windows_NT') return 'win32'
+        try {
+          return (await $.process.run(['uname', '-s'], { timeoutMs: 3_000 })).stdout.trim() === 'Darwin' ? 'darwin' : 'linux'
+        } catch { return 'linux' }
+      }
+      try {
+        const [node, git] = await Promise.all([has('node'), has('git')])
+        const note = node ? null : toolsNote(await os(), node, git)
+        if (note) r = { ...r, additionalContext: [...(r?.additionalContext ?? []), note] }
+      } catch { /* the check is a courtesy: the session starts without it */ }
+    }
     // A fresh conversation: its first request is measured as the floor.
     if (e.source === 'startup' || e.source === 'clear') g = freshGuard(g.isInteractive, true)
     else if (e.source === 'resume' || e.source === 'fork') {
