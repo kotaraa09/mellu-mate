@@ -231,7 +231,7 @@ Node.js is almost certainly missing. Mellu.mate runs on it, and without it a ses
 
 <br>
 
-Yes. It reads the existing code, and asks only what the code cannot tell it. It also adds to the notes you already have instead of replacing them: your own `CLAUDE.md` or `AGENTS.md`, an architecture file, or a folder of decision records. If `docs/` is a published documentation site, it keeps its planning notes in `planning/`, so they never appear on the site.
+Yes. It reads the existing code, and asks only what the code cannot tell it. It also adds to the notes you already have instead of replacing them: your own `CLAUDE.md` or `AGENTS.md`, an architecture file, or a folder of decision records. A new project gets an `AGENTS.md`, which Claude Code and other AI coding tools all read, so you can bring in another tool later. A project with its own `CLAUDE.md` keeps it, and setup offers the move once. If `docs/` is a published documentation site, it keeps its planning notes in `planning/`, so they never appear on the site.
 
 Setup writes these places for you. To change them later, edit `.claude/easyclaude.json`. Anything you leave out stays in its usual place:
 
@@ -287,7 +287,7 @@ Measured with Claude Code in a set-up project whose plan is in English:
 |---|---|---|
 | everything the plugin loads when a session starts | ~974 | from install |
 | your plan in `docs/STATE.md`, read back by the opener | ~25 | after setup |
-| the `CLAUDE.md` setup writes | ~264 | after setup |
+| the `AGENTS.md` setup writes | ~264 | after setup |
 | the rules setup copies into `.claude/rules/` | ~482 | after setup |
 
 The plan part grows with your plan; a plan in Thai costs a little more than the same plan in English. Skill bodies and stack recipes load only when they are used.

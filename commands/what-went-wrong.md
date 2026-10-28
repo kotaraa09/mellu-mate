@@ -38,7 +38,7 @@ The user wants to know why a session went wrong. Find out from the record, not f
    - **Where**: the step number, and a short quote from that step as evidence.
    - **Why**, if the record shows it. Say so when it does not, and do not guess.
    - **What to do next time**: one or two things the user can say or do differently. If a line in
-     `docs/STATE.md` or `CLAUDE.md` would prevent it, offer to add it, and wait for a yes.
+     `docs/STATE.md`, `AGENTS.md` or `CLAUDE.md` would prevent it, offer to add it, and wait for a yes.
 
 Change no file in this command. It reads the record and explains it; fixing the damage is a
 separate request.

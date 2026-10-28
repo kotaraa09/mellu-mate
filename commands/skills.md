@@ -40,7 +40,7 @@ restate an entry from memory - the counts and licences in that file were checked
 the source and yours were not.
 
 **With nothing after the command, work out the project yourself.** The user should not need to
-know the category names. Read `CLAUDE.md` and `docs/PRD.md`, and look for the markers that
+know the category names. Read `AGENTS.md` or `CLAUDE.md`, and `docs/PRD.md`, and look for the markers that
 say what it is: `project.godot` (a Godot game), `ProjectSettings/` (Unity), `*.uproject`
 (Unreal), a game library in `package.json` such as phaser or three, `pubspec.yaml` (a Flutter
 app), `index.html` or a web framework (a website or web app). Then say in one line what you

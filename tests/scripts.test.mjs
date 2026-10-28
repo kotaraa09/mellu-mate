@@ -457,11 +457,29 @@ test('adopt scan: an existing file is added to, an ADR folder is used, release n
   assertMatch(text, /CHANGELOG\.md is the project's own release notes/, 'release notes are not the plan\'s overflow.');
 });
 
-test('adopt scan: CLAUDE.md is added to; AGENTS.md alone is imported, not copied', async () => {
+// Claude Code reads AGENTS.md itself since 2.1.277, but only with no CLAUDE.md or
+// CLAUDE.local.md: writing a CLAUDE.md beside it would stop Claude reading it.
+test('adopt scan: CLAUDE.md is added to; AGENTS.md alone is added to, with no CLAUDE.md', async () => {
   const own = await scanOf({ 'package.json': '{}', 'CLAUDE.md': '# rules we wrote', 'AGENTS.md': '' });
   assertMatch(own.text, /CLAUDE\.md exists[^\n]*Do not rewrite it/, 'a CLAUDE.md someone wrote must survive setup.');
+  assertMatch(own.text, /rename it AGENTS\.md[^\n]*only after a yes/i, 'the move to AGENTS.md is offered, never made unasked.');
   const agents = await scanOf({ 'package.json': '{}', 'AGENTS.md': '# agent rules' });
-  assertMatch(agents.text, /"@AGENTS\.md" as its first line/, 'AGENTS.md must be read every session, by import.');
+  assertMatch(agents.text, /AGENTS\.md exists[^\n]*Do not rewrite it/, 'an AGENTS.md someone wrote must survive setup.');
+  assertMatch(agents.text, /Do not write CLAUDE\.md or CLAUDE\.local\.md/, 'either file would stop Claude reading AGENTS.md.');
+  assert(!/"@AGENTS\.md"/.test(agents.text), `the import is no longer needed:\n${agents.text}`);
+});
+
+test('session-start: a fork of the template with AGENTS.md still goes to kickoff', async () => {
+  const stub = readFileSync(join(repoRoot, 'template', 'docs', 'STATE.md'), 'utf8');
+  const r = await opener({ 'docs/STATE.md': stub, 'AGENTS.md': '# x', 'design/tokens.md': '' });
+  assertMatch(r.out, /Invoke the `kickoff` skill/, 'AGENTS.md is a note, not code.');
+});
+
+test('session-start: CLAUDE.local.md beside AGENTS.md is reported, since Claude then skips AGENTS.md', async () => {
+  const r = await opener({ 'docs/STATE.md': STATE, 'AGENTS.md': '# rules', 'CLAUDE.local.md': '# mine', 'index.html': '' });
+  assertMatch(r.out, /CLAUDE\.local\.md[^\n]*AGENTS\.md/, 'the user must hear why their AGENTS.md is not read.');
+  const fine = await opener({ 'docs/STATE.md': STATE, 'AGENTS.md': '# rules', 'index.html': '' });
+  assert(!/CLAUDE\.local\.md/.test(fine.out), `nothing to report without CLAUDE.local.md:\n${fine.out}`);
 });
 
 // With no shell - the eval runner on Windows, or a user who declined commands - kickoff
