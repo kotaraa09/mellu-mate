@@ -674,6 +674,17 @@ test('companions: each missing one is named, with its install command', () => {
   assert(!/filetree/.test(note), `an installed companion was named:\n${note}`);
 });
 
+// A user who came from easyClaude still had both under the old marketplace name: the note said
+// they were not installed, and `claude plugin update ...@mellu-mate` could not reach them.
+test('companions: a copy from the old easyclaude marketplace is named as old, with the move', () => {
+  const configDir = configWith(['mellu@mellu-mate', 'filetree@easyclaude', 'blast-radius@mellu-mate']);
+  const note = companionsNotice({ source: 'startup' }, { configDir, dataDir: null });
+  assertMatch(note, /the file tree is installed under the old easyClaude name/, 'an old copy is not a missing one.');
+  assertMatch(note, /claude plugin install filetree@mellu-mate\nclaude plugin uninstall filetree@easyclaude/,
+    'the note must carry both commands, the new copy first.');
+  assert(!/blast-radius/.test(note), `a current companion was named:\n${note}`);
+});
+
 test('companions: nothing is said when both are there, or when the record cannot be read', () => {
   const both = configWith(['mellu@mellu-mate', 'filetree@mellu-mate', 'blast-radius@mellu-mate']);
   assert(companionsNotice({ source: 'startup' }, { configDir: both, dataDir: null }) === null, 'both are installed.');

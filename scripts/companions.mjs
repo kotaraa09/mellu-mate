@@ -20,13 +20,17 @@ export const COMPANIONS = [
 
 // The companions with no install record, in any scope. An unreadable record says nothing:
 // a wrong "missing" would send someone to install what they have.
+// Each comes with `old: true` when the user has it only under the old easyclaude marketplace
+// name, as a user who came from easyClaude does: an update under the new name cannot reach it.
 export function missingCompanions({ configDir = process.env.CLAUDE_CONFIG_DIR || join(homedir(), '.claude') } = {}) {
   let installed;
   try {
     installed = JSON.parse(readFileSync(join(configDir, 'plugins', 'installed_plugins.json'), 'utf8')).plugins;
   } catch { return []; }
   if (!installed || typeof installed !== 'object') return [];
-  return COMPANIONS.filter((c) => !(Array.isArray(installed[c.id]) && installed[c.id].length));
+  const has = (id) => Array.isArray(installed[id]) && installed[id].length > 0;
+  return COMPANIONS.filter((c) => !has(c.id))
+    .map((c) => ({ ...c, old: has(c.id.replace(/@mellu-mate$/, '@easyclaude')) }));
 }
 
 // The note for a new session, or null. Once for each set of missing companions, when Claude
@@ -36,16 +40,23 @@ export function companionsNotice(payload, { configDir, dataDir = process.env.CLA
   const missing = missingCompanions(configDir ? { configDir } : {});
   if (!missing.length) return null;
 
-  const key = missing.map((c) => c.id).join(',');
+  const key = missing.map((c) => `${c.id}${c.old ? ':old' : ''}`).join(',');
   const marker = dataDir ? join(dataDir, 'companions-noted') : null;
   if (marker) {
     try { if (readFileSync(marker, 'utf8').trim() === key) return null; } catch { /* not noted yet */ }
     try { mkdirSync(dataDir, { recursive: true }); writeFileSync(marker, key); } catch { /* show it anyway */ }
   }
 
-  const names = missing.map((c) => c.name).join(' and ');
-  const verb = missing.length > 1 ? 'are' : 'is';
-  return `Mellu.mate: ${names} ${verb} not installed. To add ${missing.length > 1 ? 'them' : 'it'}, ` +
-    'run this in a terminal, then start a new session:\n' +
-    missing.map((c) => `claude plugin install ${c.id}`).join('\n');
+  const say = (list, what, how) => {
+    if (!list.length) return null;
+    const names = list.map((c) => c.name).join(' and ');
+    return `Mellu.mate: ${names} ${list.length > 1 ? 'are' : 'is'} ${what}. ${how}, ` +
+      'run this in a terminal, then start a new session:\n' +
+      list.flatMap((c) => [`claude plugin install ${c.id}`, ...(c.old ? [`claude plugin uninstall ${c.id.replace(/@mellu-mate$/, '@easyclaude')}`] : [])]).join('\n');
+  };
+  const old = missing.filter((c) => c.old);
+  return [
+    say(missing.filter((c) => !c.old), 'not installed', `To add ${missing.length - old.length > 1 ? 'them' : 'it'}`),
+    say(old, 'installed under the old easyClaude name, where updates cannot reach', `To move ${old.length > 1 ? 'them' : 'it'}`),
+  ].filter(Boolean).join('\n\n');
 }

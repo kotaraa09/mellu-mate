@@ -2,7 +2,7 @@
 import { describe, expect, mock, test } from 'claude-code/testing'
 import type { On } from 'claude-code'
 
-import { latestFrom, newer, UPDATE_STEPS } from './update'
+import { latestFrom, newer, updateSteps } from './update'
 
 const pane = {
   component: 'Pane' as const,
@@ -13,6 +13,10 @@ const pane = {
 const RELEASE = JSON.stringify({ tag_name: 'v1.5.0', html_url: 'https://github.com/kotaraa09/mellu-mate/releases/tag/v1.5.0', draft: false, prerelease: false })
 
 // A session with Mellu.mate 1.4.0 installed, and GitHub answering with `release`.
+// The plugins installed, as Claude Code records them: the companions from the old easyclaude
+// marketplace here, as a user who came from easyClaude has them.
+const INSTALLED = ['mellu@mellu-mate', 'filetree@easyclaude', 'blast-radius@mellu-mate']
+
 const world = (on: On, { release = RELEASE, env = {} as Record<string, string> } = {}) => {
   mock.clock(on, { now: 1_000_000 })
   mock.store(on)
@@ -20,6 +24,9 @@ const world = (on: On, { release = RELEASE, env = {} as Record<string, string> }
   const fetched: string[] = []
   on('http.fetch', async (_$, e: any) => { fetched.push(String(e.url)); return { value: { status: 200, ok: true, headers: {}, text: release } } as any })
   on('fs.read', async (_$, e: any) => {
+    if (/installed_plugins\.json$/.test(String(e.path))) {
+      return { value: JSON.stringify({ version: 2, plugins: Object.fromEntries(INSTALLED.map((id) => [id, [{ scope: 'user' }]])) }) } as any
+    }
     if (/plugin\.json$/.test(String(e.path))) return { value: JSON.stringify({ name: 'mellu', version: '1.4.0' }) } as any
     throw new Error(`not found: ${e.path}`)
   })
@@ -57,7 +64,16 @@ describe('the update button', () => {
     expect(await ui.find({ type: 'Text', text: /Mellu\.mate 1\.5\.0 is out/ })).toBeDefined()
     await ui.press({ key: 'update' })
     await ui.unmount()
-    expect(ran).toEqual(UPDATE_STEPS.map((s) => s.join(' ')))
+    // The old file tree is replaced by the new one; Blast Radius is updated; nothing else runs.
+    expect(ran).toEqual([
+      'claude plugin marketplace update mellu-mate',
+      'claude plugin update mellu@mellu-mate',
+      'claude plugin install filetree@mellu-mate',
+      'claude plugin uninstall filetree@easyclaude',
+      'claude plugin update blast-radius@mellu-mate',
+    ])
+    // A companion the user never installed is not added.
+    expect(updateSteps(['mellu@mellu-mate']).map((x) => x.join(' '))).toEqual(['claude plugin marketplace update mellu-mate', 'claude plugin update mellu@mellu-mate'])
     const after = await $.ui.mount({ plugin: 'mellu', surface: 'terminal', ...pane })
     expect(await after.find({ type: 'Text', text: /Start a new session/ })).toBeDefined()
     expect(await after.find({ key: 'update' })).toBeUndefined()

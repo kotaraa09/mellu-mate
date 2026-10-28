@@ -19,20 +19,39 @@ export const CHECK_EVERY_MS = 6 * 60 * 60 * 1000
 // reads each by name, as the engine requires.
 export const UPDATES_OFF = ['DISABLE_UPDATES', 'DISABLE_AUTOUPDATER', 'CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC']
 
-// What the button runs: the marketplace's listing first, then Mellu.mate, then its two
-// companions. A companion that is not installed fails its step, and nothing more.
+// What the button runs, from the plugins installed (`installed_plugins.json`): the
+// marketplace's listing first, then Mellu.mate, then each companion the user has. A user who
+// came from easyClaude has them under the old marketplace name, where `update ...@mellu-mate`
+// cannot reach them: the new copy is installed, then the old one removed, since two copies of
+// one name run the hooks of one only. A companion the user never installed is not added.
 export const PLUGIN_STEP = ['claude', 'plugin', 'update', 'mellu@mellu-mate']
-export const UPDATE_STEPS: string[][] = [
-  ['claude', 'plugin', 'marketplace', 'update', 'mellu-mate'],
-  PLUGIN_STEP,
-  ['claude', 'plugin', 'update', 'filetree@mellu-mate'],
-  ['claude', 'plugin', 'update', 'blast-radius@mellu-mate'],
-]
+const COMPANIONS = ['filetree', 'blast-radius']
+
+export function updateSteps(installed: readonly string[]): string[][] {
+  const has = new Set(installed)
+  const steps: string[][] = [['claude', 'plugin', 'marketplace', 'update', 'mellu-mate'], PLUGIN_STEP]
+  for (const name of COMPANIONS) {
+    if (has.has(`${name}@mellu-mate`)) steps.push(['claude', 'plugin', 'update', `${name}@mellu-mate`])
+    else if (has.has(`${name}@easyclaude`)) {
+      steps.push(['claude', 'plugin', 'install', `${name}@mellu-mate`], ['claude', 'plugin', 'uninstall', `${name}@easyclaude`])
+    }
+  }
+  return steps
+}
+
+// The ids in Claude Code's record of installed plugins, or none when it cannot be read.
+export function installedFrom(text: string): string[] {
+  try {
+    const plugins = JSON.parse(text)?.plugins
+    return plugins && typeof plugins === 'object' ? Object.keys(plugins).filter((id) => Array.isArray(plugins[id]) && plugins[id].length) : []
+  } catch { return [] }
+}
 
 // What the panel sends Claude when the button's own update did not finish.
 export const ASK_CLAUDE = 'Update the Mellu.mate plugin for me. Run `claude plugin marketplace update mellu-mate`, ' +
-  'then `claude plugin update mellu@mellu-mate`, `claude plugin update filetree@mellu-mate` and ' +
-  '`claude plugin update blast-radius@mellu-mate`. Tell me in one plain line whether it worked, ' +
+  'then `claude plugin update mellu@mellu-mate`, and update `filetree` and `blast-radius` from ' +
+  'the mellu-mate marketplace too. Where `claude plugin list` shows either one from the old easyclaude ' +
+  'marketplace, install it from mellu-mate, then uninstall the easyclaude copy. Tell me in one plain line whether it worked, ' +
   'and that the new version starts in a new session.'
 
 const parts = (v: string): number[] => v.replace(/^v/, '').split(/[.+-]/).slice(0, 3).map((n) => Number(n) || 0)
