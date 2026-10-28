@@ -15,7 +15,7 @@ import type { Register } from 'claude-code'
 import type { Request, Step, Usage, Waiting } from '../types'
 import { clearHeld, clearHistory, clearOnStart, clearOnTurnEnd, holdText } from './clear-reminder'
 import { HELPERS_DESCRIPTION, helperEnded } from './savvy-progress/register'
-import { ASK_CLAUDE, CHECK_EVERY_MS, PLUGIN_STEP, RELEASES, UPDATE_STEPS, latestFrom, newer } from './update'
+import { ASK_CLAUDE, CHECK_EVERY_MS, PLUGIN_STEP, RELEASES, installedFrom, latestFrom, newer, updateSteps } from './update'
 
 const CONTROLS = 'mellu-controls'
 
@@ -411,7 +411,11 @@ const runUpdate = async ($: any) => {
   void (async () => {
     let ok = false
     try {
-      for (const argv of UPDATE_STEPS) {
+      // Which companions the user has, and under which marketplace name; see updateSteps.
+      const [configDir, home, profile] = await Promise.all([$.env.get('CLAUDE_CONFIG_DIR'), $.env.get('HOME'), $.env.get('USERPROFILE')])
+      const dir = configDir || `${home || profile || ''}/.claude`
+      const installed = installedFrom(String(await $.fs.read(`${dir}/plugins/installed_plugins.json`).catch(() => '')))
+      for (const argv of updateSteps(installed)) {
         const r = await $.process.run(argv, { timeoutMs: 120_000 }).catch((e: unknown) => {
           // The plugin's own step decides; a missing companion fails alone.
           if (argv === PLUGIN_STEP) throw e
