@@ -124,13 +124,19 @@ export function report(r) {
   } else {
     out.push('Every file is in its usual place. Do not write .claude/easyclaude.json.');
   }
+  // Claude Code reads AGENTS.md itself since 2.1.277, and other coding agents read it too, but
+  // only while there is no CLAUDE.md or CLAUDE.local.md: either one makes Claude skip it.
   if (r.claudeMd) {
     out.push(`${r.claudeMd} exists, and someone wrote it on purpose. Do not rewrite it. Add only the ` +
-      "lines it lacks from kickoff's five, at the end, under a heading \"## Mellu.mate\".");
+      "lines it lacks from kickoff's five, at the end, under a heading \"## Mellu.mate\". " +
+      (r.agentsMd ? `Claude reads it and skips ${r.agentsMd}. ` : '') +
+      'Offer once, in one plain sentence, to rename it AGENTS.md so other AI tools read it too ' +
+      (r.agentsMd ? '(merged into the AGENTS.md there) ' : '') + 'and rename it only after a yes.');
   } else if (r.agentsMd) {
-    out.push(`${r.agentsMd} holds this project's instructions for coding agents, and Claude Code ` +
-      `does not read it on its own. Write CLAUDE.md with "@${r.agentsMd}" as its first line, so ` +
-      "it is read every session, then kickoff's lines. Do not copy its content.");
+    out.push(`${r.agentsMd} exists, and someone wrote it on purpose. Do not rewrite it. Add only the ` +
+      "lines it lacks from kickoff's five, at the end, under a heading \"## Mellu.mate\". Claude Code " +
+      'reads it every session by itself. Do not write CLAUDE.md or CLAUDE.local.md: either one stops ' +
+      'Claude reading it.');
   }
   if (r.docsOnly) {
     out.push(`docs/ is part of the build here. In .claude/verify.json, set "docsOnly" to ` +

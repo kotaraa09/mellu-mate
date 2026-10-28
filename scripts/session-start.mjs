@@ -45,7 +45,7 @@ const read = (rel) => {
 // what every repo has. Dotfiles never count. Anything else is code, and code means adopt,
 // not interview.
 const NOT_CODE = new Set([
-  'docs', 'design', 'CLAUDE.md', 'README.md', 'README', 'LICENSE', 'LICENSE.md',
+  'docs', 'design', 'CLAUDE.md', 'AGENTS.md', 'README.md', 'README', 'LICENSE', 'LICENSE.md',
 ]);
 const hasCode = () => {
   try {
@@ -194,6 +194,16 @@ if (autoship?.enabled === true) {
 }
 
 if (ignored.length && !COMPACT) parts.push(ignoredNotice(ignored));
+
+// Claude Code reads AGENTS.md only while no CLAUDE.md or CLAUDE.local.md is there. A personal
+// CLAUDE.local.md, added later, silently turned the project's AGENTS.md off.
+if (!COMPACT && read('AGENTS.md') !== null && read('CLAUDE.local.md') !== null &&
+  read('CLAUDE.md') === null && read('.claude/CLAUDE.md') === null) {
+  parts.push('This project keeps its instructions in AGENTS.md, and CLAUDE.local.md beside it makes ' +
+    'Claude Code skip AGENTS.md. In one plain sentence, tell the user, and offer to move what ' +
+    'CLAUDE.local.md says into AGENTS.md, or to turn on "claude-md-and-agents-md" under Project ' +
+    'instructions in /config, which reads both. Change nothing without a yes.');
+}
 
 // Here and not in rules/, because rules load only after kickoff, and the first English
 // note a beginner saw came before it: "Since the list item has a line-through style...".
