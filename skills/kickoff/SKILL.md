@@ -205,7 +205,7 @@ Three lines: what you set up, what the verify command is, and the single next ac
 
 If the project obviously wants a browser or live library docs, mention in **one line** that `/mellu:connect` wires those up from an API-key form — then drop it. It is an advanced option, not part of setup, and a project works fine with none.
 
-Mellu.mate ships no design skill, no game skill, and no deep security or testing skill,
+Mellu.mate ships no always-on design skill (`/mellu:phenomenal` runs only when typed), no game skill, and no deep security or testing skill,
 because bundling one picks it for every project that installs it. You know what this project
 is now, so pick for the user instead of sending them to a list. Read
 `reference/skills-catalogue.md` under `${CLAUDE_PLUGIN_ROOT}`, and choose **at most two** entries

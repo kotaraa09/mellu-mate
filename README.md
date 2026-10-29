@@ -174,6 +174,7 @@ You never need these for the common jobs. They cost nothing until you type them.
 /mellu:deploy             put it online and check the live address
 /mellu:generate-asset     images, audio and 3D, through a provider you have a key for
 /mellu:pick-library       find and check a library before hand-writing one
+/mellu:phenomenal         design a site or screen to award-winning standard
 /mellu:skills             add third-party skills that fit this project
 /mellu:connect            connect other tools (a browser, Figma, GitHub)
 /mellu:cheap <task>       one task in the fewest steps
@@ -299,9 +300,9 @@ Three moments cost more, and Mellu.mate tells you about each one: reopening an o
 
 <br>
 
-`node scripts/measure-cost.mjs` measures the figures above (about $1 a run), and CI fails if this page quotes different ones. CI also estimates the plugin's own share on every push, from the size of its files: <!--cost:873,313,504,56-->**~873 tokens per turn**: ~313 of rules, ~504 of skill descriptions, ~56 of agent descriptions. `skills/registry.json` sets a ceiling of 1,400, and the build fails above it.
+`node scripts/measure-cost.mjs` measures the figures above (about $1 a run), and CI fails if this page quotes different ones. CI also estimates the plugin's own share on every push, from the size of its files: <!--cost:882,322,504,56-->**~882 tokens per turn**: ~322 of rules, ~504 of skill descriptions, ~56 of agent descriptions. `skills/registry.json` sets a ceiling of 1,400, and the build fails above it.
 
-<!--always-on:8-->Eight skills stay loaded so plain sentences reach them. Seven are the steps in the table under "Just say what you want", plus setup. The eighth is humanizer, which rewrites text that reads as AI-written. The five occasional skills load only when typed, so they cost nothing per turn. One read-only agent, the diff reviewer that `ship` uses, costs ~56. `.mcp.json` ships empty, because MCP tool lists are usually the largest cost of all and this ceiling cannot count them.
+<!--always-on:8-->Eight skills stay loaded so plain sentences reach them. Seven are the steps in the table under "Just say what you want", plus setup. The eighth is humanizer, which rewrites text that reads as AI-written. The six occasional skills load only when typed, so they cost nothing per turn. One read-only agent, the diff reviewer that `ship` uses, costs ~56. `.mcp.json` ships empty, because MCP tool lists are usually the largest cost of all and this ceiling cannot count them.
 
 </details>
 

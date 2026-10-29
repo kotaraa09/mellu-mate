@@ -8,7 +8,8 @@ allowed-tools: Read, Bash, Glob
 Requested: `$ARGUMENTS`
 
 Mellu.mate ships one skill from outside: humanizer, which rewrites text that reads as
-AI-written, and is built in and always on. It ships no design skill, no marketing skill, and no deep security or
+AI-written, and is built in and always on. Its own design skill, `/mellu:phenomenal`, runs
+only when typed, so it picks nothing for anybody. It ships no always-on design skill, no marketing skill, and no deep security or
 testing skill. That is deliberate. Bundling one picks it for everybody and charges every
 session for the pick. This command shows what exists, states what each one costs, scans it,
 and installs only what the user asks for.
