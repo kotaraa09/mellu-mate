@@ -1,6 +1,6 @@
 ---
 name: phenomenal
-description: Design a website or UI to the standard of award-winning sites - one strong idea, a signature moment, custom navigation, transitions and scroll motion, and craft in every detail - built fast, accessible and in this project's own direction, then judged by an independent reviewer. Use when the user asks for a standout, award-level, immersive or unforgettable site or screen.
+description: Design a website or UI to the standard of award-winning sites - one strong idea, a signature moment, custom navigation, drawings, 3D, transitions and scroll motion, and craft in every detail - built fast, accessible and in this project's own direction, with an independent jury on the idea and the finished site. Use when the user asks for a standout, award-level, immersive or unforgettable site or screen.
 disable-model-invocation: true
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, WebSearch, WebFetch, Skill, Agent
 ---
@@ -19,7 +19,7 @@ the subject, every time.
 
 A competent site is a failure here. A clean hero photo, a good headline, tidy cards and a
 working form score 6 or 7 from a jury. The difference between that and a Site of the Day is
-the idea and the craft layer in step 7, and both are required, not optional.
+the idea and the craft layer in step 8, and both are required, not optional.
 
 ## What the top sites share
 
@@ -74,7 +74,7 @@ Write five ideas quickly, then cut them to three. Reject an idea when:
   example in the brief is the starting line, not an idea.
 - **It fits any brand.** "Smooth scroll with fading sections" is not an idea.
 - **It is a device, not an idea.** A clock, a progress bar or a counter in the header is
-  a device. Keep a device only when the idea needs it (see step 7).
+  a device. Keep a device only when the idea needs it (see step 8).
 
 For each of the three, write one line each for:
 
@@ -85,11 +85,25 @@ For each of the three, write one line each for:
 - What moves on scroll.
 - Why it belongs to this subject and to no other.
 
-If the brief is complete, pick the strongest yourself and carry on. List all three in your
-final report, with the reason for the pick. If the user is in the conversation and the brief
-is thin, recommend one and wait for their pick instead.
+### 3. Have the ideas judged before you build
 
-### 3. Set the system
+The score is won or lost at the idea. A reviewer after the build can only polish; it cannot
+replace a weak idea, and fix rounds after the build do not move the score. So the jury sees
+the ideas first, while changing them costs nothing.
+
+Read `reference/jury.md` next to this skill, and start a reviewer with the Agent tool using
+its **idea review** prompt. Give it the brief and your three ideas, written as above. It
+returns a score out of 10 for each, the faults it sees, and how the best one could be
+stronger.
+
+Take the best idea and apply the reviewer's changes. If no idea scores 8 or more, write
+three new ones and have a new reviewer judge them. Stop after two rounds and take the best.
+
+If the brief is complete, carry on without asking. List all three ideas in your final
+report, with the reviewer's scores and the reason for the pick. If the user is in the
+conversation and the brief is thin, show them the judged ideas and wait for their pick.
+
+### 4. Set the system
 
 Write the direction into `design/tokens.md` (create it if the project has none), so the next
 session keeps it:
@@ -105,7 +119,7 @@ session keeps it:
 - Motion: one easing curve, three durations, and what each kind of movement means.
 - Sound, only if the idea needs it: off until the user turns it on.
 
-### 4. Pick the tools for the ambition
+### 5. Pick the tools for the ambition
 
 - **Calm:** HTML and CSS. Use scroll-driven animations, view transitions and `@property`.
 - **Rich:** Motion (MIT) or GSAP with ScrollTrigger (free, with its own licence, not open
@@ -117,7 +131,7 @@ session keeps it:
 Run `/mellu:pick-library` before you install anything new, and fit the project's existing
 stack instead of adding a second one.
 
-### 5. Write the words
+### 6. Write the words
 
 Words the user gave for the site, such as a tagline, a description or a product text, go on
 the page exactly as given. Do not edit them, and do not run anything over them.
@@ -130,7 +144,7 @@ Then load the `humanizer` skill and run it over every line you wrote, and only t
 Put the rewritten lines in the page. Copy that sounds written by AI breaks the idea faster
 than any visual fault.
 
-### 6. Build the signature moment first
+### 7. Build the signature moment first
 
 Build the one moment as a working slice before the rest of the site: real content, real
 type, real motion. Open it in the browser, use it, and take screenshots.
@@ -144,7 +158,7 @@ changes an image the visitor scrolled past is broken, however good each half loo
 If the moment does not land, the rest of the site will not save it, so fix it here or go
 back to step 2.
 
-### 7. Build the craft layer
+### 8. Build the craft layer
 
 Build the rest of the site with every item below, each designed for this idea. These are what
 separate a Site of the Day from a good site.
@@ -167,26 +181,54 @@ separate a Site of the Day from a good site.
   density: some sections dense, some almost empty.
 - **Micro-interactions.** Every link, card, image and button responds to hover and press in
   the site's own way. A custom cursor only if it carries meaning.
-- **Depth.** At least one of: a 3D scene, a shader on the photographs, or layered parallax,
-  with a still fallback when WebGL is missing or the device is slow.
+- **Made for this site, beyond what was supplied.** Supplied photographs and logos are the
+  base, not the whole kit. Add elements nobody handed you:
+  - An icon set drawn for the site in SVG, in one stroke weight that matches the type. Use a
+    library such as Phosphor Icons (MIT) only for plain interface icons (close, arrow,
+    menu), restyled to match.
+  - At least one drawn layer: line illustrations, botanical or technical drawings, a map or
+    plan, hand-drawn marks, a pattern from the subject. SVG, so it can draw itself on
+    scroll.
+  - Extra images when they help the idea: run `/mellu:generate-asset` if a provider key is
+    set up, or use free stock (Unsplash or Pexels licences) and record each source. When the
+    brief says to use only the supplied photographs, keep to them and make the rest in code.
+- **Depth and perception.** At least one 3D or perspective element: a Three.js scene built
+  from the subject (a model, a space, an object to turn), photographs placed as planes in
+  3D space that the camera moves through, CSS 3D transforms with real perspective, or
+  layers at different depths that move at different speeds. Play with scale and viewpoint:
+  zoom from a detail to the whole, look down from above, move through a frame into the
+  next scene. Give it a still fallback when WebGL is missing or the device is slow.
+- **Something always moves.** Slow ambient motion keeps the page alive between scroll
+  events: drifting particles, light that flickers, leaves that sway, a gentle camera drift,
+  type that breathes. Quiet enough to read over, and off under reduced motion.
 - **Persistent elements earn their place.** Anything that stays on screen, such as a readout
-  in the header or a progress line, must show something the visitor needs, and must be
-  exact. If it only decorates, or tracks the scroll loosely, cut it. A device that suited
-  one project usually does not suit the next.
+  in the header, a progress line or a floating menu, must show something the visitor needs,
+  and must be exact. If it only decorates, or tracks the scroll loosely, cut it. A device
+  that suited one project usually does not suit the next.
+- **Floating elements read over anything and cover nothing.** Give a floating element its
+  own backing, such as a translucent panel with a background blur or a solid card, so it
+  stays legible over photographs and text. Place it where it never covers a heading, a
+  button or the main task, and check this at every scroll position.
 
-### 8. Polish pass
+### 9. Polish pass
 
 Check each item in the browser, on desktop and at phone width:
 
 - Every interactive element has a hover, a focus and a pressed state.
-- Motion uses the easing and durations from step 3, and nothing else.
+- Motion uses the easing and durations from step 4, and nothing else.
 - Type does not overflow, widow or clash at any width, and every small text is easy to read.
+- No letter is cut off. Text revealed through a mask or a box with `overflow: hidden` loses
+  the tails of g, j, p and y, and the tops of accents, when the line height is tight. Give
+  the mask room below the baseline, and check every masked headline.
+- The first screen shows the headline and the main action within two seconds, with no
+  scroll or tap, on desktop and on a phone.
+- No floating element covers a heading, a button or the main task at any scroll position.
 - The loader, the 404 page and the footer belong to the idea.
 - The main task (booking, buying, contacting) works from start to end, including empty and
   wrong input.
 - Nothing on the page could be on any other brand's site.
 
-### 9. Independent jury
+### 10. Independent jury
 
 You built the page, so you will score it too kindly. Someone else scores it.
 
@@ -194,16 +236,19 @@ You built the page, so you will score it too kindly. Someone else scores it.
    1440px and phone at 390px, one per section; the signature moment before, during and
    after use; each step of the main task; the menu open; the 404 page.
 2. Read `reference/jury.md` next to this skill, and start a reviewer with the Agent tool
-   using that prompt. Give it the brief, the `review/` folder and the site's folder. Do not
-   give it your rationale, your notes or this conversation.
-3. The site passes when the reviewer scores Design 8 or more, no other part below 7.5, and
-   a weighted total of 8 or more.
-4. Below that, fix the reviewer's list in order, capture new screenshots, and start a new
-   reviewer, never the same one. Stop after three rounds.
+   using its **site review** prompt. Give it the brief, the `review/` folder and the site's
+   folder. Do not give it your rationale, your notes or this conversation.
+3. Fix every item on the reviewer's list, in order, and check each fix in the browser.
+   There is one review round. A second round costs as much as the first and, in testing,
+   did not raise the score: the idea review in step 3 is where the score moves.
 
-End your report with the last reviewer's table: each part, its score, its evidence, and the
-total. If the brief has its own rubric, add the reviewer's scores for it too. If the site
-did not pass, say so plainly and name what still holds it back.
+The site passes when the reviewer scores Design 8 or more, no other part below 7.5, and a
+weighted total of 8 or more.
+
+End your report with the reviewer's table: each part, its score, its evidence, and the
+total. If the brief has its own rubric, add the reviewer's scores for it too. Then list the
+fixes you made after the review, which the score does not yet include. If the site did not
+pass, say so plainly and name what still holds it back.
 
 ## Rules that do not bend
 
@@ -230,6 +275,7 @@ If the page shows any of these, the idea or the craft layer is missing. Go back.
 - A logo on the left, links on the right and a pill button, on every site you build.
 - Every section the same band: label, heading, paragraph, image on one side.
 - Every section fades up the same way as you scroll.
-- Purple-to-blue gradients, glass panels, and glowing blobs with no reason.
+- Purple-to-blue gradients, glass panels on everything, and glowing blobs with no reason.
+- Only the supplied assets, placed in boxes: no drawing, icon or 3D made for the site.
 - One sans-serif face for everything, at safe sizes.
 - Stock icons in circles, and copy such as "Unlock the power of".
