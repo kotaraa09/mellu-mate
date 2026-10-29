@@ -29,7 +29,10 @@ write them and you owe their author nothing.
 - The three ideas: `<the ideas, pasted in full>`
 
 For each idea, give a score on the scale above for the site it would make if built well,
-and say why in two or three lines. Mark an idea down when:
+and say why in two or three lines. Judge the idea strictly: a sound, fitting idea that a
+good studio would also reach scores 7, not 8. Give 8.5 or more only to an idea you have not
+seen on an award site, that a visitor could repeat in one sentence, and that would make
+other entrants wish they had thought of it. Mark an idea down when:
 
 - The brief names it as an example, or every entrant reading the brief would think of it.
 - It is a device (a clock, a slider, a progress bar) rather than an idea.
@@ -79,8 +82,13 @@ Each one costs points. Name every one you find.
   what their action did.
 - A persistent element (a header readout, a progress line) that decorates, or tracks
   inexactly.
-- A floating element that covers a heading, a button or the main task, or that is hard to
-  read over a photograph.
+- A floating element, the fixed header and logo included, that covers a heading, a button
+  or the main task, or that is hard to read over a photograph.
+- A tracker (an active tab, a counter, a progress line) that shows a different section from
+  the one on screen.
+- A section with no motion of its own, or every section moving the same way.
+- A product the brief sells with no way to see it from more than one side, when it could be
+  modelled in code.
 - Letters cut off, such as the tail of a g or y clipped by a mask.
 - A first screen that does not show the headline and the main action without a scroll or tap.
 - Small text, numbers or labels set in a display or italic face that is hard to read.
@@ -99,6 +107,7 @@ Each one costs points. Name every one you find.
 
 1. The table: part, weight, score, evidence, then the weighted total.
 2. The brief's rubric table, if it has one.
-3. Every fix worth making, the one that would raise the score most first. Each fix names
+3. Every fix worth making, the one that would raise the score most first. Aim the list at
+   9, not at the pass mark: include what would lift a passing site further. Each fix names
    the place on the page and what to change, concretely enough to build without asking.
    The builder gets no second review, so leave nothing out.

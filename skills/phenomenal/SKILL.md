@@ -21,6 +21,10 @@ A competent site is a failure here. A clean hero photo, a good headline, tidy ca
 working form score 6 or 7 from a jury. The difference between that and a Site of the Day is
 the idea and the craft layer in step 8, and both are required, not optional.
 
+**Aim for 9, not 8.** A score of 8 is the lowest pass, not the target. A site built to
+scrape past 8 lands at 7. At every step, ask what a strong Site of the Day would do here,
+and do that, not the least that clears the bar.
+
 ## What the top sites share
 
 Studied from sites such as landonorris.com, messenger.abeto.co, igloo.inc, lusion.co,
@@ -96,8 +100,9 @@ its **idea review** prompt. Give it the brief and your three ideas, written as a
 returns a score out of 10 for each, the faults it sees, and how the best one could be
 stronger.
 
-Take the best idea and apply the reviewer's changes. If no idea scores 8 or more, write
-three new ones and have a new reviewer judge them. Stop after two rounds and take the best.
+Take the best idea and apply the reviewer's changes. If no idea scores 8.5 or more, write
+three new ones, taking what the reviewer said into account, and have a new reviewer judge
+them. Stop after three rounds and take the best.
 
 If the brief is complete, carry on without asking. List all three ideas in your final
 report, with the reviewer's scores and the reason for the pick. If the user is in the
@@ -176,6 +181,11 @@ separate a Site of the Day from a good site.
   colour change, an image that grows into the next section. No hard cuts between bands.
 - **Scroll choreography.** At least two pinned or scrubbed sequences, where scroll position
   drives what happens, not just triggers a fade.
+- **Motion throughout.** Every section has its own motion, designed for what it shows: type
+  that splits and slides in, images that unmask or scale, drawings that draw themselves,
+  products that turn or assemble, numbers that count, lists that stagger. No section just
+  sits there or fades up like the one before it. Keep it smooth (transform and opacity,
+  60 frames a second) and turn it down under reduced motion.
 - **Arrangement.** No two sections in a row share a layout. At least one composition breaks
   the grid on purpose: overlap, offset, type over image, a full-bleed break. Vary the
   density: some sections dense, some almost empty.
@@ -203,6 +213,10 @@ line on why in your notes. Using all of them is as generic as using none.
   hotel room, a venue), an object whose making matters, or a portfolio of 3D work. Build it
   in Three.js (MIT), and give it a still fallback when WebGL is missing or the device is
   slow. A 3D scene with no reason in the brief is decoration, and it costs load time.
+  No 3D model in the kit is not a reason to skip it. Furniture, packaging, devices and most
+  products are boxes, cylinders, discs and extrusions: model them in code from the
+  photographs and the stated sizes, with materials sampled from the photographs. One
+  photographed angle is enough to build the others.
 - **Perspective and scale, when they say something.** Photographs as planes the camera moves
   through, CSS 3D transforms, layers at different depths, a zoom from a detail to the whole.
   Use them when the story is about a place, a size or a process.
@@ -213,10 +227,11 @@ line on why in your notes. Using all of them is as generic as using none.
   in the header, a progress line or a floating menu, must show something the visitor needs,
   and must be exact. If it only decorates, or tracks the scroll loosely, cut it. A device
   that suited one project usually does not suit the next.
-- **Floating elements read over anything and cover nothing.** Give a floating element its
-  own backing, such as a translucent panel with a background blur or a solid card, so it
-  stays legible over photographs and text. Place it where it never covers a heading, a
-  button or the main task, and check this at every scroll position.
+- **Floating elements read over anything and cover nothing.** A fixed header, a logo, a
+  bottom bar and a floating menu are all floating elements. Give each one its own backing,
+  such as a translucent panel with a background blur or a solid card, so it stays legible
+  over photographs and text. Place it, or hide it while scrolling down, so it never covers
+  a heading, a button or the main task, and check this at every scroll position.
 
 ### 9. Polish pass
 
@@ -230,7 +245,10 @@ Check each item in the browser, on desktop and at phone width:
   the mask room below the baseline, and check every masked headline.
 - The first screen shows the headline and the main action within two seconds, with no
   scroll or tap, on desktop and on a phone.
-- No floating element covers a heading, a button or the main task at any scroll position.
+- No floating element, the fixed header included, covers a heading, a button or the main
+  task at any scroll position.
+- Anything that tracks the scroll (an active tab, a counter, a progress line) shows the
+  section that is actually on screen. Scroll through slowly and check each change.
 - The loader, the 404 page and the footer belong to the idea.
 - The main task (booking, buying, contacting) works from start to end, including empty and
   wrong input.
