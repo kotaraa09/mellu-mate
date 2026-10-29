@@ -180,7 +180,10 @@ separate a Site of the Day from a good site.
 - **Section transitions.** Each section hands over to the next: a pin, a mask reveal, a
   colour change, an image that grows into the next section. No hard cuts between bands.
 - **Scroll choreography.** At least two pinned or scrubbed sequences, where scroll position
-  drives what happens, not just triggers a fade.
+  drives what happens, not just triggers a fade. One strong form, when the brief has a hero
+  object: an anchor that stays in the middle of the screen while the content around it
+  changes. A product, a word, a video or a 3D model holds its place, and turns, tilts or
+  shifts a little with each section, so the visitor reads the whole story around one thing.
 - **Motion throughout.** Every section has its own motion, designed for what it shows: type
   that splits and slides in, images that unmask or scale, drawings that draw themselves,
   products that turn or assemble, numbers that count, lists that stagger. No section just
