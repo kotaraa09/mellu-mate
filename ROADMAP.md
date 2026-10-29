@@ -69,6 +69,14 @@ up, not D&D, so Claude cannot fill a gap from memory; it must read them.
 code, all 25 pass on a creator that follows the rule book, and leaving out one rule fails
 that rule alone. No paid run yet.
 
+**Next: the rule book as a long PDF, built 2026-10-29.** The user's own case had the rules
+in a long source, a web page, and they suspect the reading: a long document comes back
+summarised, so Claude builds a skeleton. `outcome-character-rules-pdf` puts the same 25
+rules in a 31-page PDF, among lore and long tables, with three rules only in the appendix.
+The free tests pass; no paid run yet. A web page is not covered: the benchmark has no web
+access, and the fetch tool summarises a page before Claude sees it, which a later task
+could stand in for.
+
 **Done when.** The task runs 5 times in each arm, before and after the ledger, and the
 number of rules built of 25 is stated for each. **Effort:** 1 day for the task, 2-3 days for
 the ledger, about $15 of runs.

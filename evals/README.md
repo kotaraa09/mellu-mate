@@ -1,7 +1,7 @@
 # Evals
 
 Nineteen cases that check **which skill fires on which sentence**, run by `claude plugin eval`.
-Fourteen more, in [`outcomes/`](outcomes/), check **whether the result works**. See
+Fifteen more, in [`outcomes/`](outcomes/), check **whether the result works**. See
 [the outcome benchmark](#the-outcome-benchmark).
 
 ## The gap they cover
@@ -528,6 +528,13 @@ game. It measures roadmap item 11, the requirements ledger, before and after:
 ```bash
 node scripts/bench.mjs --case outcome-character-rules
 ```
+
+`outcome-character-rules-pdf` is the same task with the rule book as a 31-page PDF
+(`RULES.pdf`, built by `make-pdf.mjs` from `book.txt`): the same 25 rules, between lore,
+equipment lists and a bestiary, with the name and level rules and the "same skill twice"
+rule only in the appendix at the end. Same hidden tests, so the two tasks compare directly:
+the difference is how a long document reaches Claude. On Windows without poppler, a read
+of chosen PDF pages fails; a read of the whole file works.
 
 **Setup in a project someone else started.** `outcome-adopt-existing` runs setup in a
 recipe site that a friend handed over: `docs/` is a published MkDocs site, decisions are one

@@ -1,0 +1,325 @@
+# Emberfall: The Player's Book
+
+## Welcome to Emberfall
+
+Emberfall is a tabletop game of travel, danger and old fire. One player is the game master, who describes the world and plays everyone the heroes meet. Every other player makes one hero and speaks for that hero at the table. Dice decide what words cannot.
+
+The world of Emberfall is a ring of islands around the Cinder Sea. Long ago a star fell into that sea and did not go out. Its heat still rises through the water, and where the steam touches land, strange things grow. The people of the islands call the fallen star the Ember, and they measure their history from the night it fell.
+
+This book has everything a player needs. Chapter 2 to Chapter 6 tell you how to make a hero, step by step. Chapter 7 lists the things a hero can buy. Chapter 8 tells you how the game is played: how to travel, how to fight and how to rest. Chapter 9 describes some of the creatures a hero can meet. The appendix at the end of the book holds the character sheet and the clarifications that the game's authors added after the first printing. Read the appendix before you finish your first hero: some of its rules change what earlier chapters say.
+
+## How to read the rules
+
+Most of this book is description. It tells you what the world looks like and how its people think. Rules are written plainly, and each rule says what the hero gets or what the player must do. When a description and a rule disagree, the rule wins. When an earlier rule and a clarification in the appendix disagree, the clarification wins.
+
+## The steps of making a hero
+
+A hero is made in this order: name and level, origin, scores, class, path, background. Each step can depend on the steps before it. A hero's path, for example, depends on the hero's class, and a hero's skills depend on both the background and the class.
+
+The game master tells each player the level at which the heroes start. New groups start at level 1. A group that joins a story already under way can start higher.
+
+## A short history of the islands
+
+Before the Ember fell, the islands were cold and nearly empty. Fishing families lived on the southern shores, and a few shepherds kept goats on the high moors of the north. The night the star fell, the sea boiled for nine days. When the steam cleared, the islands were warm, the moors were green, and the first Ashlings walked out of the burned forests of Cindral as if they had always lived there.
+
+In the centuries that followed, three peoples came to share the ring of islands. The Stoneborn dug their halls into the cliffs of the north. The Windkin built their tall towns on the windward coasts, where the steam clouds break. The Ashlings stayed near the hot springs and the burned forests, and they still say the Ember speaks to them in dreams.
+
+Today the islands are linked by ferries, old roads and older treaties. The Free Ports trade with everyone. The Moot of Halls governs the Stoneborn cliffs. The Windkin towns elect a Speaker every seven years. And in the deep forests, the Ashling elders keep their own counsel, as they always did.
+
+## What heroes do
+
+Heroes in Emberfall are wanderers, guards, scholars and thieves who take on work that ordinary people will not. They escort ferries through the steam banks, clear old tombs of the things that nest in them, carry messages between rival ports and look for pieces of the Ember, which sell for a fortune and burn the hands of the unworthy.
+
+# Chapter 2: Origins
+
+## The three peoples
+
+Every hero belongs to one of three peoples, called origins: Stoneborn, Windkin or Ashling. A hero's origin is chosen at the start and never changes. Each origin adds a bonus to the hero's scores, gives the hero one origin feature, and colours how other people see the hero. A choice of origin that is not one of these three is not allowed.
+
+## Stoneborn
+
+The Stoneborn are broad, slow-spoken people with grey or red-brown skin and hair like dark moss. They live in the cliff halls of the north, where whole families share one long room cut into the rock. A Stoneborn hall can be four hundred years old, and its people remember every name carved into its walls.
+
+Stoneborn value promises above gold. A Stoneborn who breaks a promise loses their place at the hall's table, and few things are worse. Outsiders often find them stubborn. The Stoneborn find outsiders forgetful.
+
+Stoneborn heroes are often guards, smiths and miners who left the halls to see the warm south. Some left in disgrace and some left in search of a debt to repay.
+
+Rules: A Stoneborn adds 2 to might and 1 to heart. A Stoneborn gets the origin feature Stone Skin, which adds 1 to defense.
+
+## Windkin
+
+The Windkin are tall and light, with long fingers and hair that lifts in any breeze. Their towns stand on stilts above the windward cliffs, and their children learn to walk the rope bridges before they can read. They love speed, wit and stories, and a Windkin who has no story to tell at dinner is pitied.
+
+The Windkin trade in news. A ship's captain who wants to know which ports are closed, which lords are at war and which roads are safe asks a Windkin, and pays for the answer.
+
+Windkin heroes are often messengers, scouts and traders. Many of them have never stayed in one place for more than a season.
+
+Rules: A Windkin adds 2 to grace and 1 to wit. A Windkin gets the origin feature Light Step. A Windkin's speed is 35. The speed of every hero who is not a Windkin is 30.
+
+## Ashling
+
+Ashlings look almost like the other peoples, but their eyes catch the light like coals, and their skin is warm to the touch even in winter. They first appeared after the Ember fell, and no one, not even the Ashlings, knows where they came from. Ashling families are small and close, and they live near the hot springs of the south.
+
+Ashlings are said to be lucky, short-tempered and impossible to burn. The first two are not always true. The last one nearly is.
+
+Ashling heroes come from every walk of life. Each Ashling is different, and the origin bonus reflects this: an Ashling player chooses which scores grow.
+
+Rules: An Ashling adds 1 to each of two scores that the player chooses. The two scores must be different, and each one must be one of the four scores: might, grace, wit or heart. An Ashling without two different, known scores chosen is not allowed. An Ashling gets the origin feature Ember Heart. An Ashling has a resistance to fire. A hero who is not an Ashling has no resistances.
+
+## Origins and the world
+
+The peoples of Emberfall live side by side, and most heroes have friends of every origin. Some old quarrels remain. Stoneborn halls do not forget the Windkin traders who sold them bad iron in the Year of Ash 212. Windkin towns still tell jokes about Stoneborn ferry pilots. And both peoples are a little afraid of the Ashlings, though few of them would say so.
+
+The game master can use these quarrels in a story, but they never change a hero's rules.
+
+# Chapter 3: Scores
+
+## The four scores
+
+Every hero has four scores: might, grace, wit and heart. Might is strength of body. Grace is speed, balance and a steady hand. Wit is memory, reason and a quick tongue. Heart is courage, health and the will to go on.
+
+## Buying scores
+
+The player buys each of the four base scores with points. All four base scores must be given. Each base score is a whole number from 8 to 15. A base score below 8 or above 15, or a base score that is not a whole number, is not allowed.
+
+Each base score costs points, as below. The four costs added together must be 27 or less. Scores that cost more than 27 points together are not allowed.
+
+Base score 8 costs 0 points. Base score 9 costs 1 point. Base score 10 costs 2 points. Base score 11 costs 3 points. Base score 12 costs 4 points. Base score 13 costs 5 points. Base score 14 costs 7 points. Base score 15 costs 9 points.
+
+The base score is the score before any origin bonus. The final score is the base score plus the origin bonus from Chapter 2. A hero's character sheet shows the final scores.
+
+## Modifiers
+
+Each final score has a modifier. The modifier is the score minus 10, divided by 2, rounded down. A score of 10 or 11 has a modifier of 0. A score of 12 or 13 has a modifier of 1. A score of 9 has a modifier of -1, and a score of 8 has a modifier of -1 as well. The character sheet shows a modifier for each of the four scores.
+
+## Scores in play
+
+When a hero tries something hard, the player rolls a twenty-sided die and adds the modifier of the score that fits. A Stoneborn guard lifting a fallen gate adds the might modifier. A Windkin thief walking a rope adds the grace modifier. The game master says how high the total must be. Chapter 8 explains these rolls in more detail.
+
+## Example of buying scores
+
+Mara wants a strong, healthy guard. She buys might 15 for 9 points, heart 13 for 5 points, grace 12 for 4 points and wit 12 for 4 points. That is 22 points, which is 27 or less, so she has 5 points that she does not spend. Points that are not spent are lost: they do not carry to a later level.
+
+# Chapter 4: Classes
+
+## What a class is
+
+A hero's class is the hero's trade: what the hero trained to do. There are three classes: Warden, Sage and Trickster. A class that is not one of these three is not allowed. A hero's class gives a hit die, class features and one class skill. Chapter 6 describes the class skills.
+
+## The Warden
+
+Wardens are the shield of Emberfall. They guard ferries, gates and caravans, and they stand in front when the steam banks part and something comes out of them. A Warden trains with heavy armour and a tall shield from the first day.
+
+Rules: The Warden's hit die is 10. A Warden adds 2 to defense, because of the Warden's armour. At level 1, a Warden gets the class feature Shield Wall. At level 5, a Warden also gets the class feature Second Wind. A Warden has no spell slots.
+
+## The Sage
+
+Sages study the Ember and the fire that it left in the world. With the right words a Sage can call that fire into a spark, a shield or a light that does not go out. Sages are rare, and most of them learned at one of the three colleges of the Free Ports.
+
+Rules: The Sage's hit die is 6. At level 1, a Sage gets the class feature Spark. At level 5, a Sage also gets the class feature Deep Focus. A Sage has spell slots, which say how many spells the Sage can cast before a rest. A Sage's spell slots are the Sage's level plus the wit modifier, and at least 1.
+
+## The Trickster
+
+Tricksters live by speed and nerve. Some are thieves, some are spies and some are just very good at cards. A Trickster wins a fight before the other side knows that it started.
+
+Rules: The Trickster's hit die is 8. At level 1, a Trickster gets the class feature Sneak Strike. At level 5, a Trickster also gets the class feature Quick Hands. A Trickster has no spell slots.
+
+## Hit points
+
+Hit points measure how much harm a hero can take before falling. At level 1, a hero's hit points are the class's hit die plus the heart modifier. Each level after level 1 adds half the hit die, plus 1, plus the heart modifier. For example, a Warden with a heart modifier of 1 has 11 hit points at level 1, and 18 at level 2.
+
+## Defense
+
+Defense measures how hard a hero is to hit. A hero's defense is 10 plus the grace modifier. The Warden's armour adds 2. The origin feature Stone Skin adds 1, and the Thornguard path in Chapter 5 adds 1. Nothing else in this book changes defense.
+
+## The order of features
+
+A hero's character sheet lists the hero's features in this order: the origin feature first, then the class features from the lowest level, then the path features from the lowest level.
+
+# Chapter 5: Paths
+
+## Choosing a path
+
+At level 3, every hero chooses a path. A path is a special branch of the hero's class. A hero below level 3 has no path, and a player cannot choose one early: a path for a hero below level 3 is not allowed, and the character sheet shows no path. From level 3, a path is needed: a hero of level 3 or higher without a path is not allowed.
+
+On the character sheet, the path is written in the field named subclass, because earlier printings of this book called paths subclasses.
+
+## The paths of each class
+
+Each class has two paths. A path of another class is not allowed.
+
+The paths of the Warden are the Oathkeeper and the Thornguard. The paths of the Sage are the Starreader and the Hollowscribe. The paths of the Trickster are the Veilrunner and the Coinblade.
+
+## Path features
+
+Each path gives one path feature at level 3 and a second path feature at level 7.
+
+## The Oathkeeper
+
+The Oathkeeper swears to protect one place, one person or one cause, and keeps the oath until death. Oathkeepers are common in the Stoneborn halls, where oaths are carved into stone.
+
+Rules: The Oathkeeper's path features are Sworn Guard at level 3 and Unbroken at level 7. An Oathkeeper adds the hero's level to hit points.
+
+## The Thornguard
+
+The Thornguard learns to fight from the hedges of the burned forests, where every branch has thorns. Their armour grows small spikes, and anyone who strikes them pays for it.
+
+Rules: The Thornguard's path features are Bramble Hide at level 3 and Thorn Burst at level 7. A Thornguard adds 1 to defense.
+
+## The Starreader
+
+The Starreader reads the sky above the Cinder Sea, where the Ember's light still colours the stars. Starreaders know a little of what is coming, and they have more power to cast spells.
+
+Rules: The Starreader's path features are Star Map at level 3 and Fate Glimpse at level 7. A Starreader has 1 more spell slot.
+
+## The Hollowscribe
+
+The Hollowscribe writes spells in ink made from the ash of the burned forests. A Hollowscribe's book is a weapon, and the pages that it leaves blank are the most dangerous.
+
+Rules: The Hollowscribe's path features are Ink Ward at level 3 and Blank Page at level 7.
+
+## The Veilrunner
+
+The Veilrunner moves through the steam banks as if they were a door. No one sees a Veilrunner arrive, and few see one leave.
+
+Rules: The Veilrunner's path features are Fade at level 3 and Shadow Door at level 7.
+
+## The Coinblade
+
+The Coinblade fights with luck, and the luck of a Coinblade is a coin that always lands the right way up. Coinblades are popular in the Free Ports, where everyone gambles.
+
+Rules: The Coinblade's path features are Lucky Coin at level 3 and Gilded Edge at level 7.
+
+# Chapter 6: Backgrounds and skills
+
+## Backgrounds
+
+A hero's background is the life that the hero had before the adventures began. There are four backgrounds: Smith, Scholar, Wanderer and Noble. A background that is not one of these four is not allowed. Each background gives two skills.
+
+## The Smith
+
+The Smith grew up at a forge, among hammers and coals. Smiths are strong and know how things are made.
+
+Rules: The Smith background gives the skills Craft and Athletics.
+
+## The Scholar
+
+The Scholar grew up among books, in a college or a temple library. Scholars know old stories and read people well.
+
+Rules: The Scholar background gives the skills Lore and Insight.
+
+## The Wanderer
+
+The Wanderer grew up on the roads and the ferries, with no home but the next camp. Wanderers know how to live off the land and how to stay out of sight.
+
+Rules: The Wanderer background gives the skills Survival and Stealth.
+
+## The Noble
+
+The Noble grew up in a great house of the Free Ports or a Windkin town. Nobles know how to talk to powerful people, and they know the history of their families.
+
+Rules: The Noble background gives the skills Persuasion and Lore.
+
+## Class skills
+
+Each class gives one more skill. The Warden's class skill is Athletics. The Sage's class skill is Arcana. The Trickster's class skill is Stealth.
+
+## The skills and their scores
+
+There are eight skills. Each skill uses one score. Athletics uses might. Craft uses might. Stealth uses grace. Survival uses wit. Lore uses wit. Arcana uses wit. Insight uses heart. Persuasion uses heart.
+
+A skill's bonus is the hero's proficiency bonus plus the modifier of the skill's score. Chapter 8 explains the proficiency bonus. The character sheet lists each skill that the hero has, with its bonus, and no skill that the hero does not have.
+
+# Chapter 7: Equipment
+
+## Money
+
+Emberfall's coins are the copper bit, the silver crown and the gold sun. Ten bits make a crown, and ten crowns make a sun. Prices in this chapter are in crowns. Every hero starts with the equipment of their class and 10 crowns, which the hero can spend on anything below. Equipment does not change any score, defense or hit point on the character sheet: the game master keeps track of it in play.
+
+## The equipment list
+
+@table equipment
+
+## Ferry fares and services
+
+@table services
+
+# Chapter 8: Playing the game
+
+## Rolls
+
+When a hero tries something whose result is not certain, the player rolls a twenty-sided die. The player adds the modifier of the score that fits. If the hero has a skill that fits, the player adds the skill's bonus instead. The game master sets a target number: 10 for an easy task, 15 for a hard one and 20 for a task that only a hero could do.
+
+## The proficiency bonus
+
+A hero's training grows with experience. The proficiency bonus is 2 at levels 1 to 4, 3 at levels 5 to 8 and 4 at levels 9 and 10. It is added to the bonus of every skill that the hero has. The character sheet shows the proficiency bonus.
+
+## Travel
+
+Travel between the islands is by ferry, by the old roads or through the steam banks, where no road goes. A day of travel by road covers 20 miles for a hero with speed 30, and 24 miles for a hero with speed 35. Ferries keep their own times.
+
+@table travel
+
+## Combat
+
+A fight is played in rounds. In each round, every hero and every creature acts one time, from the fastest to the slowest. On a hero's turn, the hero can move up to their speed in feet and do one thing: attack, cast a spell, use a feature or help a friend.
+
+To attack, the player rolls a twenty-sided die and adds the might modifier, or the grace modifier for a bow or a light blade. If the total is equal to or higher than the target's defense, the attack hits. The weapon says how much harm it does, and that harm comes off the target's hit points.
+
+A hero at 0 hit points falls and cannot act. A friend can help the hero up with a roll of 10 or higher, using heart.
+
+## Resting
+
+A short rest is an hour of quiet. It gives back hit points equal to the hero's level. A long rest is a night of sleep. It gives back all hit points and all spell slots.
+
+## Fire and resistance
+
+Fire harm is common in Emberfall: the steam banks are hot, and many creatures breathe flame. A hero with a resistance to fire takes half of all fire harm, rounded down.
+
+## Levels
+
+Heroes gain levels by finishing stories. The game master says when the heroes reach a new level. A hero can reach level 10 at most, and a level is a whole number from 1 to 10. A level outside 1 to 10, or a level that is not a whole number, is not allowed.
+
+# Chapter 9: Creatures of the islands
+
+## About this chapter
+
+The creatures below are for the game master to use. Players can read them, but nothing in this chapter changes how a hero is made.
+
+@table bestiary
+
+# Appendix A: The character sheet
+
+## The choices
+
+The character creator takes the player's choices and returns the character sheet. When a choice breaks a rule of this book, the character creator refuses it with an error and gives no sheet.
+
+The choices have these fields: name, level, origin, originBonus, scores, className, subclass, background and extraSkill. The field originBonus is for an Ashling only, and holds the two scores that get 1 more, such as wit and heart. The field scores holds the four base scores before any bonus: might, grace, wit and heart. The field subclass holds the hero's path from Chapter 5. The field extraSkill is used only when Appendix B asks for it.
+
+## The name
+
+A hero's name has its spaces taken off both ends. Then it has 1 to 20 characters. A name that is empty, or longer than 20 characters, is not allowed. The character sheet shows the name without the spaces at its ends.
+
+## The sheet
+
+The character sheet has these fields: name, level, origin, className, subclass, background, scores, modifiers, proficiency, hp, defense, speed, resistances, features, skills and spellSlots.
+
+The field subclass holds the hero's path, or nothing (null) for a hero below level 3. The fields scores and modifiers each have one entry for each of the four scores. The field hp holds the hit points. The field resistances is a list, such as fire, or an empty list. The field features is a list in the order from Chapter 4. The field skills has one entry for each skill the hero has, with its bonus, such as Lore 4, Insight 2 and Athletics 5. The field spellSlots is 0 for a hero who has no spell slots.
+
+# Appendix B: Clarifications
+
+## Clarifications after the first printing
+
+The game's authors added these clarifications after the first printing of this book. Each one wins over what an earlier chapter says.
+
+## The same skill twice
+
+A hero's class skill can be one that the hero's background already gave. A Warden Smith, for example, gets Athletics from both. When this happens, the player picks an extra skill (the field extraSkill) instead of the repeated one. The extra skill must be one of the eight skills from Chapter 6, and one that the hero does not have yet. A hero whose class skill repeats a background skill, and who has no extra skill, is not allowed. When the class skill is new for the hero, an extra skill is not allowed.
+
+## Starting money
+
+Chapter 7 says that every hero starts with 10 crowns. This is still true. Starting money is not part of the character sheet.
+
+## Rounding
+
+Everything in this book that is divided is rounded down, unless the rule says something else.
