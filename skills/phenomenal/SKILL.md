@@ -2,7 +2,7 @@
 name: phenomenal
 description: Design a website or UI to the standard of award-winning sites - one strong idea, a signature moment, type and motion with intent, and craft in every detail - built fast, accessible and in this project's own direction. Use when the user asks for a standout, award-level, immersive or unforgettable site or screen.
 disable-model-invocation: true
-allowed-tools: Read, Write, Edit, Bash, Glob, Grep, WebSearch, WebFetch
+allowed-tools: Read, Write, Edit, Bash, Glob, Grep, WebSearch, WebFetch, Skill
 ---
 
 # Phenomenal
@@ -92,7 +92,20 @@ session keeps it:
 Run `/mellu:pick-library` before you install anything new, and fit the project's existing
 stack instead of adding a second one.
 
-### 5. Build the signature moment first
+### 5. Write the words
+
+Words the user gave for the site, such as a tagline, a description or a product text, go on
+the page exactly as given. Do not edit them, and do not run anything over them.
+
+Write every other line yourself: the headline, the tagline, section text, button labels,
+the 404 page, the footer. Write them for the idea from step 2, in the subject's own voice,
+with real details from the brief instead of general praise.
+
+Then load the `humanizer` skill and run it over every line you wrote, and only those lines.
+Put the rewritten lines in the page. Copy that sounds written by AI breaks the idea faster
+than any visual fault.
+
+### 6. Build the signature moment first
 
 Build the one moment as a working slice before the rest of the site: real content, real
 type, real motion. Open it in the browser, take a screenshot, and show the user. If the
@@ -101,7 +114,7 @@ step 2.
 
 Then build outward: the hero, the sections, the transitions, the small details.
 
-### 6. Polish pass
+### 7. Polish pass
 
 Check each item in the browser, on desktop and at phone width:
 
@@ -110,6 +123,30 @@ Check each item in the browser, on desktop and at phone width:
 - Type does not overflow, widow or clash at any width.
 - The loader, the 404 page and the footer belong to the idea.
 - Nothing on the page could be on any other brand's site.
+
+### 8. Score it as an Awwwards jury would
+
+Score the page the way the Awwwards jury scores a Site of the Day, from 1 to 10 for each
+part, with the weight it carries:
+
+| Part | Weight | What earns a high score |
+|---|---|---|
+| Design | 40% | Type, colour, layout and imagery that feel made for this subject alone |
+| Usability | 30% | Clear paths, fast loads, works on a phone and with a keyboard |
+| Creativity | 20% | An idea and a signature moment no other site has |
+| Content | 10% | Words and visuals that tell the story, with no filler |
+
+Score from what is on the screen, not from what you meant to build. Take fresh screenshots
+on desktop and at phone width, scroll the whole page, and use the signature moment. For
+each part, write the score and one line of evidence a juror would point to. Use half
+points, and when you are between two scores, take the lower one: you built this page, so
+you will want to round up.
+
+If Design scores below 8, or the weighted total is below 8, fix the weakest things the
+evidence names, then take new screenshots and score again. Stop after three rounds. If it
+still scores below 8, say so plainly and name what holds it back.
+
+End your report with the final table: each part, its score, its evidence, and the total.
 
 ## Rules that do not bend
 
