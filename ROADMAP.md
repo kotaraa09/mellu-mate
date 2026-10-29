@@ -23,6 +23,21 @@ the skill.
 
 Efforts are working time. Benchmark runs are on top: about $0.60 per small task and $2.50
 for the two-session task at list price, which is plan usage on a Claude plan.
+
+## Experimental behavior lab, 2026-10-29
+
+Three opt-in phases now have a dependency-free implementation: recorded behavior
+comparisons and owner decisions, source-rule tracing, and selective removal rehearsed
+in a separate local clone. See [the formats and limits](docs/behavior-lab.md).
+`node scripts/behavior-demo.mjs` exercises all three on a fictional project;
+`node scripts/test.mjs behavior` checks engine behavior without model calls.
+
+These are not measured improvements over plain Claude. The longitudinal experiment
+in [evals/behavior-lab/README.md](evals/behavior-lab/README.md) is the next research
+step, including a skill-only arm. Source extraction still needs a separate reader;
+selective removal supports recorded linear commits and stops on conflicts. Native
+panels and automatic scenario discovery are not part of this first version.
+
 ## Now: small and cheap
 
 Each item here is a few days at most, and costs a few dollars of runs or none.

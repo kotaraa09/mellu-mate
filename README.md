@@ -160,6 +160,16 @@ Debt:    3 items - reset tokens never expire
 
 Small changes skip all of that.
 
+### Experimental: review what your app does
+
+Three optional commands share recorded examples: `/mellu:behavior-review` compares
+actual outcomes before and after a change; `/mellu:rules-trace` connects source
+passages to interpretations and checked examples; `/mellu:feature-undo` rehearses
+removing a recorded feature in a separate checkout while checking retained behavior.
+They load only when invoked. The tools make no model calls; Claude still uses normal
+quota when setting up or discussing them. These are experimental, with no measured
+advantage over plain Claude yet. [Setup, demo and limitations](docs/behavior-lab.md).
+
 <details>
 <summary><b>The commands</b></summary>
 

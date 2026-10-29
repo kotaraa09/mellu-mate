@@ -51,17 +51,17 @@ function readStore() {
   return { projects: {} };
 }
 
-export function isTrusted(root, steps) {
-  return readStore().projects[folderKey(root)] === fingerprint(steps);
+export function isTrusted(root, steps, scope = '') {
+  return readStore().projects[scope ? `${scope}:${folderKey(root)}` : folderKey(root)] === fingerprint(steps);
 }
 
 // Written to a temporary file and renamed into place, so a crash never leaves half a record,
 // and private to the user, since it lists the folders they work in. Windows refuses the
 // rename while another process has the file open - a hook in a second session reading it -
 // so it tries a few times, and then writes in place: a whole record late beats none.
-export function trust(root, steps) {
+export function trust(root, steps, scope = '') {
   const store = readStore();
-  store.projects[folderKey(root)] = fingerprint(steps);
+  store.projects[scope ? `${scope}:${folderKey(root)}` : folderKey(root)] = fingerprint(steps);
   const file = trustFile();
   const text = JSON.stringify(store, null, 2) + '\n';
   mkdirSync(dirname(file), { recursive: true });

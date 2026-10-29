@@ -21,6 +21,7 @@ const SUITES = [
   ['harness', () => import('../tests/harness.test.mjs')],
   ['validate', () => import('../tests/validate.test.mjs')],
   ['verify', () => import('../tests/verify.test.mjs')],
+  ['behavior', () => import('../tests/behavior.test.mjs')],
   ['scripts', () => import('../tests/scripts.test.mjs')],
   ['connect', () => import('../tests/connect.test.mjs')],
   ['providers', () => import('../tests/providers.test.mjs')],
@@ -37,6 +38,11 @@ if (!chosen.length) {
 
 // One suite, in this process: what each child below runs.
 if (process.argv.includes('--one')) {
+  // The behavior suite mixes synchronous Git rehearsals with asynchronous CLI
+  // probes. Parallel cases starve the probes' pipe/timeout callbacks while Git
+  // blocks this process, producing empty output or artificial timeouts. Keep its
+  // cases serial; other suites still run concurrently in their own processes.
+  if (chosen.length === 1 && chosen[0][0] === 'behavior') process.env.MELLU_TEST_POOL = '1';
   const { runAll, cleanup } = await import('../tests/harness.mjs');
   for (const [, load] of chosen) await load();
   let ok = false;
@@ -65,7 +71,11 @@ const runSuite = (name) => new Promise((done) => {
     done({ name, ok, count, out });
   });
 });
-const results = await Promise.all(chosen.map(([name]) => runSuite(name)));
+// Replaying applications and cloning Git histories competes directly with the
+// validator's process-startup tests. Run this heavier integration area afterward,
+// so CPU/IO contention cannot turn a bounded scenario run into a false timeout.
+const results = await Promise.all(chosen.filter(([name]) => name !== 'behavior').map(([name]) => runSuite(name)));
+if (chosen.some(([name]) => name === 'behavior')) results.push(await runSuite('behavior'));
 
 // The slowest tests of the whole run, from each suite's own list.
 const slow = results.flatMap((r) => [...r.out.matchAll(/^\s+([\d.]+)s {2}(.+)$/gm)]

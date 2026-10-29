@@ -24,6 +24,7 @@ import { withLanguage } from './language.mjs';
 import { isTrusted, trust, askedAlready, markAsked, commandList } from './trust.mjs';
 import { locations } from './locations.mjs';
 import { pythonTestsFor } from './py-related.mjs';
+import { fullBehaviorGate } from './behavior/check.mjs';
 
 const args = process.argv.slice(2);
 const HOOK = args.includes('--hook');
@@ -521,7 +522,7 @@ if (TRUST && (!cfg || cfg.error || !cfg.steps.length)) {
 if (!cfg) {
   console.log('No .claude/verify.json in this project.');
   console.log('Run the kickoff skill to establish a verify contract.');
-  process.exit(0);
+  process.exit(!LIST && !FAST && fullBehaviorGate(root) ? 1 : 0);
 }
 if (cfg.error) {
   console.log(`  ERROR  ${cfg.error}`);
@@ -529,7 +530,7 @@ if (cfg.error) {
 }
 if (!cfg.steps.length) {
   console.log('.claude/verify.json has no steps - nothing to verify against.');
-  process.exit(0);
+  process.exit(!LIST && !FAST && fullBehaviorGate(root) ? 1 : 0);
 }
 
 const width = Math.max(...cfg.steps.map((s) => s.name.length));
@@ -630,4 +631,5 @@ console.log(failed.length
   : `\nOK - ${results.length - unrunnable.length} of ${results.length} step(s) passed` +
     (unrunnable.length ? `, ${unrunnable.length} could not run` : '') + heldBack);
 
-process.exit(failed.length ? 1 : 0);
+const behaviorFailed = !FAST && fullBehaviorGate(root);
+process.exit(failed.length || behaviorFailed ? 1 : 0);
