@@ -1,19 +1,25 @@
 ---
 name: phenomenal
-description: Design a website or UI to the standard of award-winning sites - one strong idea, a signature moment, type and motion with intent, and craft in every detail - built fast, accessible and in this project's own direction. Use when the user asks for a standout, award-level, immersive or unforgettable site or screen.
+description: Design a website or UI to the standard of award-winning sites - one strong idea, a signature moment, custom navigation, transitions and scroll motion, and craft in every detail - built fast, accessible and in this project's own direction, then judged by an independent reviewer. Use when the user asks for a standout, award-level, immersive or unforgettable site or screen.
 disable-model-invocation: true
-allowed-tools: Read, Write, Edit, Bash, Glob, Grep, WebSearch, WebFetch, Skill
+allowed-tools: Read, Write, Edit, Bash, Glob, Grep, WebSearch, WebFetch, Skill, Agent
 ---
 
 # Phenomenal
 
 Most sites are competent and forgettable. The few that win awards are not prettier: each one
-is built around a single idea that belongs to its subject, and everything on the page serves
-that idea. This skill finds the idea first, then builds it with the craft those sites show.
+is built around a single idea that belongs to its subject, and everything on the page, down
+to the navigation and the way one section hands over to the next, serves that idea. This
+skill finds the idea first, then builds it with the craft those sites show, then has someone
+else judge it.
 
 It picks no house style. A racing driver, a yerba mate brand and a museum archive must not
 look alike, and none of them may look like the last site you built. The direction comes from
 the subject, every time.
+
+A competent site is a failure here. A clean hero photo, a good headline, tidy cards and a
+working form score 6 or 7 from a jury. The difference between that and a Site of the Day is
+the idea and the craft layer in step 7, and both are required, not optional.
 
 ## What the top sites share
 
@@ -29,45 +35,59 @@ looks like igloo.inc is a copy, not an award.
 2. **A signature moment.** One interaction people talk about afterwards: a helmet that turns
    with the cursor, a scroll that travels through ice, a product that builds itself. One
    moment, done fully, beats ten effects done halfway.
-3. **Type as image.** Display type set very large, cropped, animated or set on a path. One
+3. **Everything is custom.** The navigation, the loader, the cursor, the section transitions
+   and the page layout are designed for this site. Nothing looks like a template slot.
+4. **Type as image.** Display type set very large, cropped, animated or set on a path. One
    distinctive display face with one quiet text face. Type carries the mood before any image
    loads.
-4. **Motion with meaning.** Every movement says something: it reveals, connects, or shows
-   cause and effect. One easing family across the whole site, durations from a small set,
-   nothing that moves only because it can.
-5. **Transitions as storytelling.** Pages and sections hand over to each other instead of
-   cutting. The loader, when there is one, is the first scene of the story, not a spinner.
-6. **Restraint.** Two or three colours, a strict grid broken on purpose, and a lot of empty
+5. **Motion with meaning.** Every movement says something: it reveals, connects, or shows
+   cause and effect. Scroll drives the story: sections pin, images unmask, type moves at its
+   own speed. One easing family across the whole site, nothing that moves only because it can.
+6. **Depth.** 3D, a shader on the photographs, or layered planes moving at different speeds.
+   The page feels like a space, not a document.
+7. **Restraint.** Two or three colours, a strict grid broken on purpose, and a lot of empty
    space. The loud part is loud because the rest is quiet.
-7. **Craft at the edges.** Hover states, the cursor, focus rings, the 404 page, the footer,
-   the copy on buttons. Judges open those, and so do users.
+8. **Craft at the edges.** Hover states, focus rings, the 404 page, the footer, the copy on
+   buttons. Judges open those, and so do users.
 
 ## Steps
 
 ### 1. Get the brief
 
-Read `docs/PRD.md`, `docs/STATE.md` and `design/tokens.md` if they exist. Then make sure you
-know three things. Ask only for the ones you cannot find, in one message:
+Read the brief and everything that comes with it: copy, images, logos, menus, rubrics. In a
+project, also read `docs/PRD.md`, `docs/STATE.md` and `design/tokens.md` if they exist.
 
-- Who visits, and what they must do or feel before they leave.
-- The subject's own material: product, story, place, people, history, sound.
-- The ambition, in plain words: **calm** (fast, almost no extra code), **rich** (scroll and
-  motion work), or **immersive** (3D or WebGL). Recommend one. Immersive costs days, not
-  hours, and needs a fallback for slow phones.
+When the brief says who visits, what they must do, and what the site must contain, ask
+nothing: make every choice yourself and record it. Only when one of those three is missing,
+ask for it, in one message.
+
+Ambition: an award-level request means **rich** (scroll choreography, transitions) or
+**immersive** (3D or WebGL). Build **calm** (HTML and CSS, little motion) only when the user
+asks for it. Immersive costs more time and needs a fallback for slow phones.
 
 ### 2. Find the idea
 
-Write three ideas. For each one give:
+Write five ideas quickly, then cut them to three. Reject an idea when:
 
-- The idea in one sentence.
-- The signature moment in one sentence.
+- **The brief names it.** If the brief offers examples ("a dusk-to-night control", "an
+  interactive specimen"), every other entrant reads the same examples and builds them. An
+  example in the brief is the starting line, not an idea.
+- **It fits any brand.** "Smooth scroll with fading sections" is not an idea.
+- **It is a device, not an idea.** A clock, a progress bar or a counter in the header is
+  a device. Keep a device only when the idea needs it (see step 7).
+
+For each of the three, write one line each for:
+
+- The idea.
+- The signature moment.
+- The navigation: how a visitor moves around, designed for this idea.
+- The transition: how one section hands over to the next.
+- What moves on scroll.
 - Why it belongs to this subject and to no other.
 
-The three must differ in kind, not in colour. Recommend one, and wait for the user to pick.
-Do not build before they pick: the idea is the whole site, and a wrong one wastes every
-step after it.
-
-Reject an idea that fits any brand. "Smooth scroll with fading sections" is not an idea.
+If the brief is complete, pick the strongest yourself and carry on. List all three in your
+final report, with the reason for the pick. If the user is in the conversation and the brief
+is thin, recommend one and wait for their pick instead.
 
 ### 3. Set the system
 
@@ -76,6 +96,10 @@ session keeps it:
 
 - The idea and the signature moment, one line each.
 - Type: the display face, the text face, and the scale. Check each font's licence for web use.
+- Readability: the display face only at 32px and above. Text, labels, numbers in forms and
+  anything a visitor must read to act use the text face, at 16px or more. No italic, condensed
+  or display face below 24px. A face that looks good in the hero and hard to read in a price
+  or a time fails here.
 - Colour: two or three, each with its job, and the contrast pairs that pass WCAG AA.
 - Grid and spacing, and where the grid breaks on purpose.
 - Motion: one easing curve, three durations, and what each kind of movement means.
@@ -83,11 +107,12 @@ session keeps it:
 
 ### 4. Pick the tools for the ambition
 
-- **Calm:** HTML and CSS. Use scroll-driven animations, view transitions and
-  `@property` before any library.
-- **Rich:** add GSAP with ScrollTrigger and a smooth-scroll library such as Lenis.
-- **Immersive:** add Three.js, or React Three Fiber in a React project, or OGL when the scene
-  is small. Write shaders only for what a texture or a model cannot do.
+- **Calm:** HTML and CSS. Use scroll-driven animations, view transitions and `@property`.
+- **Rich:** Motion (MIT) or GSAP with ScrollTrigger (free, with its own licence, not open
+  source), and Lenis (MIT) for smooth scroll.
+- **Immersive:** add Three.js (MIT), or React Three Fiber in a React project, or OGL for a
+  small scene. A fragment shader on the supplied photographs (a light reveal, a ripple, a
+  displacement on hover) often gives depth without building a 3D scene.
 
 Run `/mellu:pick-library` before you install anything new, and fit the project's existing
 stack instead of adding a second one.
@@ -108,45 +133,77 @@ than any visual fault.
 ### 6. Build the signature moment first
 
 Build the one moment as a working slice before the rest of the site: real content, real
-type, real motion. Open it in the browser, take a screenshot, and show the user. If the
-moment does not land, the rest of the site will not save it, so fix it here or go back to
-step 2.
+type, real motion. Open it in the browser, use it, and take screenshots.
 
-Then build outward: the hero, the sections, the transitions, the small details.
+**Cause and effect stay in view together.** When a control changes something (a slider, a
+dial, a toggle, a scrubber), the control and the thing it changes must be on screen at the
+same time, on desktop and at phone width. Pin the result while the visitor uses the
+control, or put the control inside the result. A slider at the bottom of a section that
+changes an image the visitor scrolled past is broken, however good each half looks.
 
-### 7. Polish pass
+If the moment does not land, the rest of the site will not save it, so fix it here or go
+back to step 2.
+
+### 7. Build the craft layer
+
+Build the rest of the site with every item below, each designed for this idea. These are what
+separate a Site of the Day from a good site.
+
+- **Custom navigation.** Not a logo on the left, links on the right and a pill button. Design
+  how a visitor finds their way for this idea: a full-screen menu with its own transition, a
+  navigation that is part of the scene, an index, a dial. Keep the main call to action one
+  tap away at every scroll position.
+- **An opening sequence.** The first two seconds are choreographed: type, image and
+  navigation arrive in an order that tells the idea. A loader, if any, is the first scene.
+- **A hero built from the idea.** Not a full-bleed photo with a headline and two buttons.
+  Compose it: crop, layer, split, mask or animate the material into something only this
+  site has.
+- **Section transitions.** Each section hands over to the next: a pin, a mask reveal, a
+  colour change, an image that grows into the next section. No hard cuts between bands.
+- **Scroll choreography.** At least two pinned or scrubbed sequences, where scroll position
+  drives what happens, not just triggers a fade.
+- **Arrangement.** No two sections in a row share a layout. At least one composition breaks
+  the grid on purpose: overlap, offset, type over image, a full-bleed break. Vary the
+  density: some sections dense, some almost empty.
+- **Micro-interactions.** Every link, card, image and button responds to hover and press in
+  the site's own way. A custom cursor only if it carries meaning.
+- **Depth.** At least one of: a 3D scene, a shader on the photographs, or layered parallax,
+  with a still fallback when WebGL is missing or the device is slow.
+- **Persistent elements earn their place.** Anything that stays on screen, such as a readout
+  in the header or a progress line, must show something the visitor needs, and must be
+  exact. If it only decorates, or tracks the scroll loosely, cut it. A device that suited
+  one project usually does not suit the next.
+
+### 8. Polish pass
 
 Check each item in the browser, on desktop and at phone width:
 
 - Every interactive element has a hover, a focus and a pressed state.
 - Motion uses the easing and durations from step 3, and nothing else.
-- Type does not overflow, widow or clash at any width.
+- Type does not overflow, widow or clash at any width, and every small text is easy to read.
 - The loader, the 404 page and the footer belong to the idea.
+- The main task (booking, buying, contacting) works from start to end, including empty and
+  wrong input.
 - Nothing on the page could be on any other brand's site.
 
-### 8. Score it as an Awwwards jury would
+### 9. Independent jury
 
-Score the page the way the Awwwards jury scores a Site of the Day, from 1 to 10 for each
-part, with the weight it carries:
+You built the page, so you will score it too kindly. Someone else scores it.
 
-| Part | Weight | What earns a high score |
-|---|---|---|
-| Design | 40% | Type, colour, layout and imagery that feel made for this subject alone |
-| Usability | 30% | Clear paths, fast loads, works on a phone and with a keyboard |
-| Creativity | 20% | An idea and a signature moment no other site has |
-| Content | 10% | Words and visuals that tell the story, with no filler |
+1. Serve the site and capture screenshots into a `review/` folder next to it: desktop at
+   1440px and phone at 390px, one per section; the signature moment before, during and
+   after use; each step of the main task; the menu open; the 404 page.
+2. Read `reference/jury.md` next to this skill, and start a reviewer with the Agent tool
+   using that prompt. Give it the brief, the `review/` folder and the site's folder. Do not
+   give it your rationale, your notes or this conversation.
+3. The site passes when the reviewer scores Design 8 or more, no other part below 7.5, and
+   a weighted total of 8 or more.
+4. Below that, fix the reviewer's list in order, capture new screenshots, and start a new
+   reviewer, never the same one. Stop after three rounds.
 
-Score from what is on the screen, not from what you meant to build. Take fresh screenshots
-on desktop and at phone width, scroll the whole page, and use the signature moment. For
-each part, write the score and one line of evidence a juror would point to. Use half
-points, and when you are between two scores, take the lower one: you built this page, so
-you will want to round up.
-
-If Design scores below 8, or the weighted total is below 8, fix the weakest things the
-evidence names, then take new screenshots and score again. Stop after three rounds. If it
-still scores below 8, say so plainly and name what holds it back.
-
-End your report with the final table: each part, its score, its evidence, and the total.
+End your report with the last reviewer's table: each part, its score, its evidence, and the
+total. If the brief has its own rubric, add the reviewer's scores for it too. If the site
+did not pass, say so plainly and name what still holds it back.
 
 ## Rules that do not bend
 
@@ -155,21 +212,24 @@ Awards are lost on these, and users are lost faster.
 - **`prefers-reduced-motion` turns the motion down**, and the site still makes sense with it.
 - **The content is in the HTML.** Text in a canvas or a WebGL scene is also in the page, so
   search engines and screen readers can read it.
-- **Keyboard works everywhere**, including the signature moment.
-- **Scroll stays the user's.** Smooth scroll is fine; trapping the scroll, breaking the back
-  button or breaking links to a section is not.
-- **Fast.** Largest Contentful Paint under 2.5 seconds on a mid-range phone. A loader may
-  last 2 seconds at most, and shows real progress. Heavy 3D loads after the first screen.
+- **Keyboard works everywhere**, including the signature moment and the custom navigation.
+- **Scroll stays the user's.** Smooth scroll and pinned sections are fine; trapping the
+  scroll, breaking the back button or breaking links to a section is not.
+- **Fast.** Largest Contentful Paint under 2.5 seconds on a mid-range phone. Use the smallest
+  image files supplied, or convert to WebP or AVIF. A loader may last 2 seconds at most and
+  shows real progress. Heavy 3D loads after the first screen.
 - **A fallback for weak devices.** Without WebGL, or on a slow phone, show a still or a
   video of the moment instead of a blank space.
 - **Contrast passes WCAG AA** for all text, including text over images and video.
 
-## Signs of a generic AI design
+## Signs of a generic design
 
-If the page shows any of these, the idea is missing. Go back to step 2.
+If the page shows any of these, the idea or the craft layer is missing. Go back.
 
-- A centred hero with a gradient, a headline, a subline and two buttons, then three cards.
+- A full-bleed photo with a headline, a subline and two buttons, then three cards.
+- A logo on the left, links on the right and a pill button, on every site you build.
+- Every section the same band: label, heading, paragraph, image on one side.
+- Every section fades up the same way as you scroll.
 - Purple-to-blue gradients, glass panels, and glowing blobs with no reason.
 - One sans-serif face for everything, at safe sizes.
-- Every section fades up the same way as you scroll.
 - Stock icons in circles, and copy such as "Unlock the power of".
