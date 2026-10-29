@@ -1,6 +1,6 @@
 ---
 name: phenomenal
-description: Design a website or UI to the standard of award-winning sites - one strong idea, a signature moment, custom navigation, drawings, 3D, transitions and scroll motion, and craft in every detail - built fast, accessible and in this project's own direction, with an independent jury on the idea and the finished site. Use when the user asks for a standout, award-level, immersive or unforgettable site or screen.
+description: Design a website or UI to the standard of award-winning sites - one strong idea, a signature moment, custom navigation, transitions and scroll motion, drawings or 3D where the brief calls for them, and craft in every detail - built fast, accessible and in this project's own direction, with an independent jury on the idea and the finished site. Use when the user asks for a standout, award-level, immersive or unforgettable site or screen.
 disable-model-invocation: true
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, WebSearch, WebFetch, Skill, Agent
 ---
@@ -181,26 +181,34 @@ separate a Site of the Day from a good site.
   density: some sections dense, some almost empty.
 - **Micro-interactions.** Every link, card, image and button responds to hover and press in
   the site's own way. A custom cursor only if it carries meaning.
-- **Made for this site, beyond what was supplied.** Supplied photographs and logos are the
-  base, not the whole kit. Add elements nobody handed you:
+- **Depth, where the page needs it.** Section transitions and scroll choreography already
+  give the page some depth. Add more only in the ways the next list allows.
+
+The items below are not a checklist. Each one is worth its cost only when the brief gives it
+a reason. Go through them, and for each one decide yes or no from the brief, and write one
+line on why in your notes. Using all of them is as generic as using none.
+
+- **Elements beyond what was supplied.** Supplied photographs and logos are the base, not
+  always the whole kit. When the idea needs more:
   - An icon set drawn for the site in SVG, in one stroke weight that matches the type. Use a
     library such as Phosphor Icons (MIT) only for plain interface icons (close, arrow,
     menu), restyled to match.
-  - At least one drawn layer: line illustrations, botanical or technical drawings, a map or
-    plan, hand-drawn marks, a pattern from the subject. SVG, so it can draw itself on
-    scroll.
-  - Extra images when they help the idea: run `/mellu:generate-asset` if a provider key is
-    set up, or use free stock (Unsplash or Pexels licences) and record each source. When the
-    brief says to use only the supplied photographs, keep to them and make the rest in code.
-- **Depth and perception.** At least one 3D or perspective element: a Three.js scene built
-  from the subject (a model, a space, an object to turn), photographs placed as planes in
-  3D space that the camera moves through, CSS 3D transforms with real perspective, or
-  layers at different depths that move at different speeds. Play with scale and viewpoint:
-  zoom from a detail to the whole, look down from above, move through a frame into the
-  next scene. Give it a still fallback when WebGL is missing or the device is slow.
-- **Something always moves.** Slow ambient motion keeps the page alive between scroll
-  events: drifting particles, light that flickers, leaves that sway, a gentle camera drift,
-  type that breathes. Quiet enough to read over, and off under reduced motion.
+  - A drawn layer: line illustrations, technical drawings, a map or plan, hand-drawn marks,
+    a pattern from the subject. SVG, so it can draw itself on scroll.
+  - Extra images: run `/mellu:generate-asset` if a provider key is set up, or use free
+    stock (Unsplash or Pexels licences) and record each source. When the brief says to use
+    only the supplied material, keep to it and make the rest in code.
+- **3D, when the subject has a shape worth turning.** A product people want to see from
+  every side (a 360-degree view), a space people will visit or buy (property, a condo, a
+  hotel room, a venue), an object whose making matters, or a portfolio of 3D work. Build it
+  in Three.js (MIT), and give it a still fallback when WebGL is missing or the device is
+  slow. A 3D scene with no reason in the brief is decoration, and it costs load time.
+- **Perspective and scale, when they say something.** Photographs as planes the camera moves
+  through, CSS 3D transforms, layers at different depths, a zoom from a detail to the whole.
+  Use them when the story is about a place, a size or a process.
+- **Ambient motion, when the subject is alive.** Slow motion between scroll events: drifting
+  particles, flickering light, leaves that sway, a gentle camera drift. Quiet enough to read
+  over, and off under reduced motion. A calm, precise brand may need stillness instead.
 - **Persistent elements earn their place.** Anything that stays on screen, such as a readout
   in the header, a progress line or a floating menu, must show something the visitor needs,
   and must be exact. If it only decorates, or tracks the scroll loosely, cut it. A device
@@ -276,6 +284,7 @@ If the page shows any of these, the idea or the craft layer is missing. Go back.
 - Every section the same band: label, heading, paragraph, image on one side.
 - Every section fades up the same way as you scroll.
 - Purple-to-blue gradients, glass panels on everything, and glowing blobs with no reason.
-- Only the supplied assets, placed in boxes: no drawing, icon or 3D made for the site.
+- The supplied assets placed in boxes, when the idea needed a drawing, an icon set or 3D.
+- 3D, particles or parallax with no reason in the brief.
 - One sans-serif face for everything, at safe sizes.
 - Stock icons in circles, and copy such as "Unlock the power of".

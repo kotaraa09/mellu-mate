@@ -37,7 +37,8 @@ and say why in two or three lines. Mark an idea down when:
 - Its signature moment is a move you have seen on many award sites, such as a zoom through
   a doorway, a sideways scrolling track, or a cursor that lights a dark page, with nothing
   new on top.
-- It gives no reason for custom elements, depth or motion beyond the supplied material.
+- It adds 3D, particles or other effects the subject gives no reason for, or misses one the
+  subject plainly needs, such as a 360-degree view of a product.
 
 Then, for the best idea, list up to five changes that would raise its score: a stronger
 signature moment, a better navigation, what to draw or build in 3D, how perspective or
@@ -86,11 +87,12 @@ Each one costs points. Name every one you find.
 - An idea taken straight from the examples in the brief.
 - Template parts: a full-bleed photo with a headline and two buttons, a logo-left
   links-right header, three cards in a row, every section fading up the same way.
-- Only the supplied assets, with no icon, drawing or 3D made for the site.
+- A missed chance the brief called for: a product with no way to see it from every side, a
+  space with no sense of being in it, a process with no drawing of it.
+- 3D, particles, parallax or ambient motion with no reason in the brief.
 - One motif repeated until it reads as a stamp.
 - Two sections in a row with the same layout.
 - Hard cuts between sections, with no transition.
-- A page that stands still between scrolls, or motion that only decorates.
 - Anything broken: overflow, overlap, a blank area, a step of the main task that fails.
 
 ### Return
