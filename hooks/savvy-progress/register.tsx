@@ -10,7 +10,6 @@ import type { EngineInterface, Register } from 'claude-code'
 
 import type { AgentRun, Panel, Request, Step } from '../../types'
 import { clearOnStep } from '../clear-reminder'
-import { afterFigures } from '../estimate'
 
 // Written by hooks/panels.tsx; read here.
 const request = atom({ plugin: 'mellu', key: 'request' } as const, null)
@@ -43,7 +42,6 @@ export type Flow = {
   tools: number
   tookMs: number | null
   // Once finished: what it cost, beside the estimate shown before it (hooks/estimate.ts).
-  cost?: string
 }
 
 const s = {
@@ -93,7 +91,6 @@ export const flowOf = (r: Request | null, p: Pick<Panel, 'dismissedAt'>): Flow |
     waiting: r.endedAt !== null ? (r.waiting?.length ?? 0) : 0,
     tools: r.tools,
     tookMs: r.endedAt === null || r.waiting?.length ? null : r.endedAt - r.startedAt,
-    cost: r.endedAt !== null && !(r.waiting?.length) && typeof r.spentUsd === 'number' ? afterFigures(r.spentUsd, r.estimate) : undefined,
   }
 }
 
@@ -112,8 +109,10 @@ const took = (ms: number): string => {
 }
 
 // The figure at the bar's right end: the time it took, the share done, or the actions so far.
+// Not the cost: beside the request's title it read as the main fact about it. The status line
+// and the progress panel keep it.
 export const side = (f: Flow): string =>
-  f.tookMs !== null ? (f.cost ? `${f.cost} · ${took(f.tookMs)}` : took(f.tookMs)) : f.waiting ? `${f.waiting} ${tr().inBackground}` : f.total ? `${Math.round(ratio(f) * 100)}%` : f.tools ? `${f.tools} actions` : ''
+  f.tookMs !== null ? took(f.tookMs) : f.waiting ? `${f.waiting} ${tr().inBackground}` : f.total ? `${Math.round(ratio(f) * 100)}%` : f.tools ? `${f.tools} actions` : ''
 
 // Deterministic noise so the dither does not shimmer between redraws.
 const noise = (x: number, y: number): number => {

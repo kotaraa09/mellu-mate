@@ -162,7 +162,7 @@ describe('in a session', () => {
     expect(status[status.length - 1]).toBe(undefined)
   })
 
-  test('a finished request joins the history, and the bar shows its cost beside the estimate', async ($, on) => {
+  test('a finished request joins the history, and the bar shows only the time it took', async ($, on) => {
     let usd = 1
     let five = 26
     const files: Record<string, string> = {}
@@ -181,10 +181,11 @@ describe('in a session', () => {
     expect(saved[0]?.ms).toBe(240_000)
     expect(saved[0]?.fiveHour).toBe(3)
     expect(files['.claude/mellu-costs/.gitignore']).toMatch(/^\*$/m)
-    // The bar's figure: the real cost beside the range shown before, and the time it took.
+    // The bar's figure is the time alone: the cost stays on the status line and in the panel.
     const ui = await $.ui.mount({ plugin: 'mellu', surface: 'terminal', component: 'AbovePrompt',
       props: { hasSurvey: false, isWorking: false, maxRows: 10, bodyColumns: 120, scroll: { offset: 0, bodyRows: 10 }, view: {} } as any })
-    expect(await ui.find({ type: 'Text', text: /^\$0\.31 \(usual \$[\d.]+-[\d.]+(, (above|below))?\) · 4m 0s$/ })).toBeDefined()
+    expect(await ui.find({ type: 'Text', text: /^4m 0s$/ })).toBeDefined()
+    expect(await ui.find({ type: 'Text', text: /\$/ })).toBeUndefined()
     await ui.unmount()
   })
 
