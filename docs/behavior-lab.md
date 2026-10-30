@@ -1,12 +1,12 @@
 # Behavior lab (experimental)
 
-Three on-demand tools share recorded examples: review behavior changes, trace source
-rules to results, and rehearse removing a feature while retaining later work. They
+Two on-demand tools share recorded examples: review behavior changes, and trace
+source rules to results. They
 run with Node.js 22 and Git, with no new packages, model calls or API charges from
 the tools themselves. Asking Claude to set up an adapter still uses the normal
 conversation quota. Your adapter may have its own dependencies or service costs.
 
-Use `/mellu:behavior-review`, `/mellu:rules-trace` or `/mellu:feature-undo`. The commands
+Use `/mellu:behavior-review` or `/mellu:rules-trace`. The commands
 load only when invoked. They are experimental; no agent benchmark or user study
 has established an improvement over plain Claude yet.
 
@@ -108,7 +108,7 @@ review. A decision import is bound to its exact observation and baseline, so an 
 review cannot silently overwrite newer accepted examples.
 
 The accepted examples live in `.claude/behavior-baseline.json`; commit this file,
-the config and adapter. Raw observations, reports, patches and candidates live in
+the config and adapter. Raw observations and reports live in
 `.claude/behavior-local/`, which gets its own ignore file. They can contain test data;
 use synthetic fixtures. Hashes detect accidental artifact edits. These files are
 not a security boundary against another process with your account's permissions.
@@ -119,7 +119,7 @@ run during `--fast`, `--list`, `--trust` or ordinary Stop hooks. The default is 
 Approving the runner uses a separate scope in the existing machine-local trust
 store; it neither approves nor replaces ordinary verify commands. Changed runner
 arguments or timeouts require approval again. Approval covers its code and fixture
-inputs in this project and in local removal candidates, not an audit of that code.
+inputs in this project, not an audit of that code.
 
 ## Phase 2: trace a rulebook
 
@@ -211,69 +211,10 @@ This verifies the recorded links and outcomes. It cannot prove that a source was
 extracted completely, a passage was classified honestly, an interpretation is right,
 or a linked example exercises every part of a rule. Owner review remains essential.
 
-## Phase 3: selectively remove a feature
-
-Record a feature's exact linear commit range, excluding the base commit:
-
-```bash
-node "${CLAUDE_PLUGIN_ROOT}/scripts/behavior.mjs" feature-record memberships --from <before-feature> --to <last-feature-commit> --title "Member discounts" --scenarios member-order
-```
-
-Records live in `.claude/behavior-features.json`. `--requires memberships` declares a
-dependency; `--scenarios` assigns examples that belong exclusively to this feature.
-An example assigned to another active feature stays protected when one owner is
-removed. Commits cannot belong to two active features. Merge commits and mixed or
-unclear feature ownership are unsupported. Save the record through the normal Git
-workflow before previewing; the tool never makes commits on your behalf.
-
-After later independent changes, with a clean checkout and passing accepted examples:
-
-```bash
-node "${CLAUDE_PLUGIN_ROOT}/scripts/behavior.mjs" remove-preview memberships
-```
-
-The tool creates an independent local clone, disables Git hooks for its own operations,
-removes that clone's origin remote, and reverses feature commits from newest to oldest.
-Today's test, source-rule and ownership contracts are preserved. Conflicting later
-edits stop the rehearsal; it does not guess a merge resolution. The original project's
-code stays untouched. The report records each conflict. The clone exists only while
-the command runs, inside `.claude/behavior-local/candidates/` so the app's installed
-dependencies still resolve from the parent folders. It is then deleted, so linters
-and test tools never find a second copy of the project.
-
-It retires feature-owned examples, marks the feature removed and runs every retained
-example and recorded source-rule check in the candidate. At least one retained,
-accepted example is required. This can detect undeclared dependencies covered by
-those examples. It cannot guarantee preservation of behavior you never recorded.
-Active source rules referring to retired examples must be deliberately resolved;
-they are not silently deleted. Source rules may therefore block removal.
-
-Inspect the JSON result, its HTML comparison and its patch. Only a passing candidate
-can be applied, after owner approval of that exact removal:
-
-```bash
-node "${CLAUDE_PLUGIN_ROOT}/scripts/behavior.mjs" remove-apply <preview-hash> --confirm memberships
-```
-
-The tool checks the patch hash, source identity, original HEAD and clean state. It
-rebuilds the candidate from the saved patch, runs the retained examples again, then
-applies the patch as uncommitted edits. New commits, pending changes and edited
-patches require a new preview. Patches are raw bytes, so files in older encodings
-such as Windows-1252 or TIS-620 come back unchanged. Review the edits and
-run the full project checks before shipping. No commit, push, history reset or
-database migration is performed. Optional dependencies are not installed into the
-candidate automatically: an unavailable runner or missing dependency is a failure.
-
-Adapters execute as you and are not sandboxed. They must honor cwd and use disposable
-local fixtures; an absolute path or external database in an adapter defeats isolation.
-Removal operates on tracked source, not past database contents, infrastructure or
-external service state. Retiring an example is not proof that a removed feature is
-unreachable; inspect the patch and remaining code as well as retained outcomes.
-
 ## Validation and research
 
 `node scripts/test.mjs behavior` exercises actual adapters, review decisions, source
-changes, Git histories, failed removals and stale evidence without model calls.
+changes and stale evidence without model calls.
 `node scripts/test.mjs` and `node scripts/validate.mjs` remain the full repository checks.
 
 The proposed longitudinal comparison is in `evals/behavior-lab/README.md`. It is

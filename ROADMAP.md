@@ -26,16 +26,16 @@ for the two-session task at list price, which is plan usage on a Claude plan.
 
 ## Experimental behavior lab, 2026-10-29
 
-Three opt-in phases now have a dependency-free implementation: recorded behavior
-comparisons and owner decisions, source-rule tracing, and selective removal rehearsed
-in a separate local clone. See [the formats and limits](docs/behavior-lab.md).
-`node scripts/behavior-demo.mjs` exercises all three on a fictional project;
+Two opt-in phases have a dependency-free implementation: recorded behavior comparisons
+and owner decisions, and source-rule tracing. A third, selective removal of a feature in
+a separate clone, was removed on 2026-10-30: rarely needed, the most complex part, and
+the most able to damage a user's files. It is in this branch's history if wanted. See [the formats and limits](docs/behavior-lab.md).
+`node scripts/behavior-demo.mjs` exercises both on a fictional project;
 `node scripts/test.mjs behavior` checks engine behavior without model calls.
 
 These are not measured improvements over plain Claude. The longitudinal experiment
 in [evals/behavior-lab/README.md](evals/behavior-lab/README.md) is the next research
-step, including a skill-only arm. Source extraction still needs a separate reader;
-selective removal supports recorded linear commits and stops on conflicts. Native
+step, including a skill-only arm. Source extraction still needs a separate reader. Native
 panels and automatic scenario discovery are not part of this first version.
 
 **Rule tracing on a long PDF, 2026-10-30.** `outcome-character-rules-pdf` puts 25 rules

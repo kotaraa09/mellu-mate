@@ -71,7 +71,7 @@ const runSuite = (name) => new Promise((done) => {
     done({ name, ok, count, out });
   });
 });
-// Replaying applications and cloning Git histories competes directly with the
+// Replaying applications competes directly with the
 // validator's process-startup tests. Run this heavier integration area afterward,
 // so CPU/IO contention cannot turn a bounded scenario run into a false timeout.
 const results = await Promise.all(chosen.filter(([name]) => name !== 'behavior').map(([name]) => runSuite(name)));

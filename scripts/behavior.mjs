@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// On-demand tools. Run --help for the three phases. No Claude/API calls.
+// On-demand tools. Run --help for the two phases. No Claude/API calls.
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -8,7 +8,6 @@ import { CONFIG, inside, loadConfig, approveRunner, capture, readArtifact, loadB
   acceptRows, compare, writeJson, need, localDir, hash } from './behavior/core.mjs';
 import { makeReview } from './behavior/report.mjs';
 import { importSource, checkRules, sourceLines, addRule, addContext } from './behavior/rules.mjs';
-import { recordFeature, loadFeatures, previewRemoval, applyRemoval } from './behavior/features.mjs';
 import { checkProject } from './behavior/check.mjs';
 
 const HELP = `Mellu.mate behavior lab (experimental; no model calls)
@@ -36,14 +35,6 @@ Phase 2: trace source rules
                                   mark lines that hold no rule, and say why
   rules-check [run]               verify quotes, classifications, examples and expectations
 
-Phase 3: rehearse selective removal
-  feature-record <id> --from <commit> [--to HEAD] [--title <words>]
-                 [--requires <id,id>] [--scenarios <id,id>]
-                                  assign linear commits and owned examples to a feature
-  features                        list recorded features; execute nothing
-  remove-preview <feature>        reverse its commits in a separate clone; verify survivors
-  remove-apply <preview> --confirm <feature>
-                                  apply the reviewed, rechecked patch as uncommitted edits
 
 Runners execute as you, without a shell or a sandbox. Use deterministic test fixtures,
 honor the working directory, and avoid production services. Nothing installs dependencies,
@@ -79,7 +70,7 @@ function parse(argv) {
   for (let n = 0; n < argv.length; n++) {
     if (!argv[n].startsWith('--')) { values.push(argv[n]); continue; }
     const key = argv[n].slice(2);
-    need(['root', 'before', 'reason', 'scenario', 'text', 'from', 'to', 'title', 'requires', 'scenarios', 'confirm', 'source', 'lines', 'unresolved', 'help'].includes(key), `Unknown option --${key}.`);
+    need(['root', 'before', 'reason', 'scenario', 'text', 'scenarios', 'source', 'lines', 'unresolved', 'help'].includes(key), `Unknown option --${key}.`);
     if (key === 'help' || key === 'unresolved') { flags[key] = true; continue; }
     need(argv[n + 1] !== undefined && !argv[n + 1].startsWith('--'), `--${key} needs a value.`);
     need(!Object.hasOwn(flags, key), `--${key} was supplied twice.`);
@@ -114,7 +105,7 @@ async function main() {
   }
   if (command === 'trust') {
     const config = loadConfig(root); approveRunner(root, config);
-    return print({ approved: config.runner, message: 'Runner approved for this project and its removal candidates on this computer. Changed runner commands require approval again.' });
+    return print({ approved: config.runner, message: 'Runner approved for this project on this computer. Changed runner commands require approval again.' });
   }
   if (command === 'run') {
     const run = capture(root, loadConfig(root), args.join(' ') || 'Observation');
@@ -163,13 +154,6 @@ async function main() {
     const result = checkRules(root, run, config); need(result, 'No source rules are recorded. Use source-add first.');
     print(result); if (!result.passed) process.exitCode = 1; return;
   }
-  if (command === 'feature-record') return print(recordFeature(root, args[0], { from: flags.from, to: flags.to, title: flags.title,
-    requires: flags.requires?.split(',') ?? [], scenarios: flags.scenarios?.split(',') ?? [] }));
-  if (command === 'features') return print(loadFeatures(root));
-  if (command === 'remove-preview') {
-    const plan = previewRemoval(root, args[0]); print(plan); if (!plan.passed) process.exitCode = 1; return;
-  }
-  if (command === 'remove-apply') return print(applyRemoval(root, args[0], flags.confirm));
   throw new Error(`Unknown command: ${command}. Run --help.`);
 }
 

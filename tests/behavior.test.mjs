@@ -3,12 +3,11 @@ import { test, assert, assertMatch, projectDir, run, repoRoot, runVerify } from 
 import { writeFileSync, readFileSync, existsSync, mkdirSync, symlinkSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { runInNewContext } from 'node:vm';
-import { CONFIG, BASELINE, RULES, FEATURES, LOCAL, loadConfig, approveRunner, capture, readArtifact, hash, compare,
+import { CONFIG, BASELINE, RULES, LOCAL, loadConfig, approveRunner, capture, readArtifact, hash, compare,
   loadBaseline, baselineRows, acceptRows, inside, git, revision, writeJson } from '../scripts/behavior/core.mjs';
 import { makeReview } from '../scripts/behavior/report.mjs';
 import { importSource, checkRules, addRule, addContext } from '../scripts/behavior/rules.mjs';
 import { checkProject } from '../scripts/behavior/check.mjs';
-import { recordFeature, previewRemoval, applyRemoval } from '../scripts/behavior/features.mjs';
 
 function throws(fn, pattern) {
   let error; try { fn(); } catch (e) { error = e; }
@@ -38,38 +37,6 @@ function saveCommit(root, message) {
   git(root, ['add', '--all']);
   git(root, ['-c', 'user.name=Mellu Test', '-c', 'user.email=mellu@example.invalid', 'commit', '-m', message]);
   return revision(root);
-}
-// Test copies live only while a command runs, so no other tool finds a second project.
-function noCandidates(root) {
-  const dir = join(root, LOCAL, 'candidates');
-  assert(!existsSync(dir) || !readdirSync(dir).length, `A test copy of the project was left behind: ${existsSync(dir) ? readdirSync(dir) : ''}`);
-}
-function featureFixture({ conflict = false, dependent = false, breakGuest = false } = {}) {
-  const { root, config } = fixture();
-  writeFileSync(join(root, 'membership.mjs'), 'export const discount = () => 0;\n');
-  writeFileSync(join(root, 'shipping.mjs'), "export const shipping = () => 'standard';\n");
-  writeFileSync(join(root, 'shop.mjs'), `import { discount } from './membership.mjs';
-import { shipping } from './shipping.mjs';
-export const checkout = (input) => ({ total: input.subtotal * (1 - discount(input)), delivery: shipping() });\n`);
-  git(root, ['init', '--initial-branch=main']);
-  const base = saveCommit(root, 'Base shop');
-  writeFileSync(join(root, 'membership.mjs'), 'export const discount = (input) => input.member ? 0.1 : 0;\n');
-  const featureTip = saveCommit(root, 'Add member discount');
-  writeFileSync(join(root, 'shipping.mjs'), "export const shipping = () => 'scheduled';\n");
-  if (conflict) writeFileSync(join(root, 'membership.mjs'), 'export const discount = (input) => input.member ? 0.2 : 0;\n');
-  if (breakGuest) writeFileSync(join(root, 'shop.mjs'), `import { discount } from './membership.mjs';
-import { shipping } from './shipping.mjs';
-export const checkout = (input) => ({ total: input.subtotal - 5 + (discount(input) ? 0 : 5), delivery: shipping() });\n`);
-  saveCommit(root, 'Add delivery scheduling');
-  recordFeature(root, 'memberships', { from: base, to: featureTip, title: 'Member discounts', scenarios: ['member'] });
-  if (dependent) {
-    const features = JSON.parse(readFileSync(join(root, FEATURES), 'utf8'));
-    features.features.push({ id: 'vip', title: 'VIP', status: 'active', commits: [revision(root)], requires: ['memberships'], scenarios: [] });
-    writeJson(root, FEATURES, features);
-  }
-  accept(root, capture(root, config, 'Accepted current shop'));
-  saveCommit(root, 'Save accepted examples and feature ownership');
-  return { root, config, base, featureTip };
 }
 
 test('behavior: an unapproved runner executes nothing', () => {
@@ -338,105 +305,4 @@ test('rules: rule-add and context-add copy the quote and hashes, so a written ru
   assert(checkRules(root, capture(root, config), config).passed, 'Reviewed entries must check again.');
   const unresolved = await cli(root, ['rule-add', 'full-price', '--source', 'policy', '--lines', '2', '--text', 'Unclear.', '--unresolved']);
   assert(unresolved.code === 0 && JSON.parse(unresolved.out).status === 'unresolved', unresolved.out);
-});
-
-test('features: a removal candidate preserves later independent work and leaves the original untouched', () => {
-  const { root } = featureFixture(); const head = revision(root), before = readFileSync(join(root, 'membership.mjs'), 'utf8');
-  const plan = previewRemoval(root, 'memberships');
-  assert(plan.passed, JSON.stringify(plan));
-  assert(revision(root) === head && readFileSync(join(root, 'membership.mjs'), 'utf8') === before, 'Preview changed original code.');
-  assert(!git(root, ['status', '--porcelain']).stdout.trim(), 'Preview dirtied the original checkout.');
-  const patch = readFileSync(join(root, plan.patchPath), 'utf8');
-  assert(patch.includes('+export const discount = () => 0;'), 'The patch does not remove the feature.');
-  assert(!patch.includes('shipping.mjs'), 'The patch changes later independent work.');
-  noCandidates(root);
-});
-test('features: a reviewed removal is rechecked and applied as uncommitted changes', () => {
-  const { root } = featureFixture(); const head = revision(root);
-  const plan = previewRemoval(root, 'memberships');
-  throws(() => applyRemoval(root, plan.hash, 'wrong-feature'), /--confirm/);
-  const applied = applyRemoval(root, plan.hash, 'memberships');
-  assert(applied.applied && revision(root) === head, 'Removal must not commit or rewind HEAD.');
-  assert(readFileSync(join(root, 'membership.mjs'), 'utf8').includes('() => 0'), 'Feature removal was not applied.');
-  assert(readFileSync(join(root, 'shipping.mjs'), 'utf8').includes('scheduled'), 'Later work was not preserved.');
-  assert(checkProject(root).passed, 'Retained examples must still pass after application.');
-  noCandidates(root);
-});
-test('features: conflicting later edits stop removal without changing the original', () => {
-  const { root } = featureFixture({ conflict: true });
-  const before = readFileSync(join(root, 'membership.mjs'), 'utf8');
-  const plan = previewRemoval(root, 'memberships');
-  assert(!plan.passed && plan.conflicts.length > 0, 'A conflicting reversal must not be called verified.');
-  throws(() => applyRemoval(root, plan.hash, 'memberships'), /did not pass/);
-  assert(readFileSync(join(root, 'membership.mjs'), 'utf8') === before, 'A conflict changed original code.');
-});
-test('features: declared dependents prevent removal before cloning', () => {
-  const { root } = featureFixture({ dependent: true });
-  throws(() => previewRemoval(root, 'memberships'), /Other features depend/);
-});
-test('features: undeclared coupling is detected by retained scenarios', () => {
-  const { root } = featureFixture({ breakGuest: true });
-  // This adapter's guest total depends on membership implementation through a condition
-  // that becomes visible only after removing the old function.
-  writeFileSync(join(root, 'shop.mjs'), `import { discount } from './membership.mjs';
-import { shipping } from './shipping.mjs';
-export const checkout = (input) => ({ total: input.member ? 45 : discount({member:true}) ? 50 : 55, delivery: shipping() });\n`);
-  accept(root, capture(root, loadConfig(root))); saveCommit(root, 'Introduce a hidden dependency');
-  const plan = previewRemoval(root, 'memberships');
-  assert(!plan.passed && plan.after, 'A retained scenario failure must stop removal.');
-  throws(() => applyRemoval(root, plan.hash, 'memberships'), /did not pass/);
-});
-test('features: pending edits prevent rehearsal', () => {
-  const { root } = featureFixture(); writeFileSync(join(root, 'shipping.mjs'), '// unsaved change\n');
-  throws(() => previewRemoval(root, 'memberships'), /pending changes/);
-});
-test('features: new commits invalidate a reviewed removal', () => {
-  const { root } = featureFixture(); const plan = previewRemoval(root, 'memberships');
-  writeFileSync(join(root, 'new.txt'), 'Later work'); saveCommit(root, 'New work');
-  throws(() => applyRemoval(root, plan.hash, 'memberships'), /new commits/);
-});
-test('features: an edited patch cannot be applied', () => {
-  const { root } = featureFixture(); const plan = previewRemoval(root, 'memberships');
-  const patch = join(root, plan.patchPath), original = readFileSync(patch, 'utf8');
-  writeFileSync(patch, original + 'tampered'); throws(() => applyRemoval(root, plan.hash, 'memberships'), /patch changed/);
-  noCandidates(root);
-});
-test('features: a feature must have surviving accepted behavior to protect', () => {
-  const { root } = featureFixture();
-  const book = JSON.parse(readFileSync(join(root, FEATURES), 'utf8')); book.features[0].scenarios = ['guest', 'member'];
-  writeJson(root, FEATURES, book); saveCommit(root, 'Own all examples');
-  throws(() => previewRemoval(root, 'memberships'), /at least one retained/);
-});
-test('features: reversing deleted text and binary files includes their contents in the reviewed patch', () => {
-  const { root } = featureFixture();
-  // A separate feature commit deletes a tracked file; its inverse creates an untracked
-  // file until staging. A plain git diff would silently omit it from the final patch.
-  writeFileSync(join(root, 'retired.txt'), 'Restore this exact text.\n');
-  const binary = Buffer.from([0, 255, 13, 10, 4, 0, 128]);
-  writeFileSync(join(root, 'retired.bin'), binary);
-  const from = saveCommit(root, 'Add a document');
-  git(root, ['rm', 'retired.txt', 'retired.bin']); const to = saveCommit(root, 'Remove a document');
-  recordFeature(root, 'doc-removal', { from, to, title: 'Document removal', scenarios: [] });
-  saveCommit(root, 'Record document removal');
-  const plan = previewRemoval(root, 'doc-removal');
-  assert(plan.passed, JSON.stringify(plan));
-  applyRemoval(root, plan.hash, 'doc-removal');
-  assert(readFileSync(join(root, 'retired.txt'), 'utf8').replaceAll('\r\n', '\n') === 'Restore this exact text.\n', 'The restored file was lost from the patch.');
-  assert(readFileSync(join(root, 'retired.bin')).equals(binary), 'The restored binary contents were changed.');
-});
-test('features: a file in an older text encoding is removed and restored byte for byte', () => {
-  const { root } = featureFixture();
-  // Windows-1252 and TIS-620 bytes are not UTF-8. Decoded as UTF-8, the reverse patch no
-  // longer matches the file, and the removal stops with a false conflict.
-  const legacy = (word) => Buffer.concat([Buffer.from('caf'), Buffer.from([0xe9]), Buffer.from(` ${word} `), Buffer.from([0xc1, 0xd2, 0xa1]), Buffer.from('\n')]);
-  writeFileSync(join(root, 'legacy.txt'), legacy('old'));
-  const from = saveCommit(root, 'Add a legacy file');
-  writeFileSync(join(root, 'legacy.txt'), legacy('new')); const to = saveCommit(root, 'Change the legacy file');
-  recordFeature(root, 'legacy-change', { from, to, title: 'Legacy change', scenarios: [] });
-  saveCommit(root, 'Record the legacy change');
-  const plan = previewRemoval(root, 'legacy-change');
-  assert(plan.passed, JSON.stringify(plan.conflicts ?? plan));
-  applyRemoval(root, plan.hash, 'legacy-change');
-  // Git may write CRLF on Windows checkouts; every other byte must be the original.
-  assert(readFileSync(join(root, 'legacy.txt'), 'latin1').replaceAll('\r\n', '\n') === legacy('old').toString('latin1'), 'The legacy file did not come back byte for byte.');
 });

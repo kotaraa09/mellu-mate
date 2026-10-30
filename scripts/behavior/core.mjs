@@ -10,7 +10,6 @@ import { isTrusted, trust } from '../trust.mjs';
 export const CONFIG = '.claude/behavior.json';
 export const BASELINE = '.claude/behavior-baseline.json';
 export const RULES = '.claude/behavior-rules.json';
-export const FEATURES = '.claude/behavior-features.json';
 export const LOCAL = '.claude/behavior-local';
 export const equal = isDeepStrictEqual;
 export const canonical = (v) => JSON.stringify(v, (_, x) => x && typeof x === 'object' && !Array.isArray(x)

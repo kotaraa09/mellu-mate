@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Exercise all three phases on a new fictional shop, using no model or API calls.
+// Exercise both phases on a new fictional shop, using no model or API calls.
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -7,7 +7,6 @@ import { randomBytes } from 'node:crypto';
 import { CONFIG, RULES, LOCAL, localDir, writeJson, git, revision, approveRunner, capture, acceptRows } from './behavior/core.mjs';
 import { makeReview } from './behavior/report.mjs';
 import { importSource, checkRules } from './behavior/rules.mjs';
-import { recordFeature, previewRemoval, applyRemoval } from './behavior/features.mjs';
 import { checkProject } from './behavior/check.mjs';
 
 const plugin = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -62,16 +61,12 @@ console.log(JSON.stringify(checkout(input)));\n`);
       id: 'policy', fromLine: 2, toLine: 2, quote: 'Guests pay the full item price.', sha256: source.sha256, textSha256: source.textSha256 }, scenarios: ['guest-order'] }],
     context: [{ source: 'policy', fromLine: 1, toLine: 1, textSha256: source.textSha256, reason: 'Document title.' }] });
   const traced = makeReview(root, current, null, checkRules(root, current, config));
-  recordFeature(root, 'memberships', { from: base, to: featureTip, title: 'Member discounts and refunds', scenarios: ['member-order'] });
-  commit('Record source rules, accepted examples and feature ownership');
-  const plan = previewRemoval(root, 'memberships');
-  if (!plan.passed) throw new Error(`Demo removal failed: ${JSON.stringify(plan)}`);
-  const applied = applyRemoval(root, plan.hash, 'memberships');
+  commit('Record source rules and accepted examples');
   const checked = checkProject(root);
-  if (!checked.passed) throw new Error('Demo failed after applying selective removal.');
-  console.log(JSON.stringify({ project: root, behaviorReview: behaviorReview.html, ruleReview: traced.html, removalReview: plan.reviewHtml,
-    removal: plan.hash, applied, finalCheck: checked.passed,
-    message: 'All three phases ran on a fictional shop. Memberships were removed; later delivery scheduling and the retained guest rule still pass.' }, null, 2));
+  if (!checked.passed) throw new Error(`Demo check failed: ${JSON.stringify(checked.issues)}`);
+  console.log(JSON.stringify({ project: root, behaviorReview: behaviorReview.html, ruleReview: traced.html,
+    finalCheck: checked.passed,
+    message: 'Both phases ran on a fictional shop: a refund regression showed in the review, and the guest rule traces to a passing example.' }, null, 2));
 } catch (e) { console.error(`Behavior demo: ${e.message}`); process.exitCode = 1; }
 finally {
   if (oldTrust === undefined) delete process.env.MELLU_TRUST_FILE; else process.env.MELLU_TRUST_FILE = oldTrust;

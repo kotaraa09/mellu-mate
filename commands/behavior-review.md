@@ -21,8 +21,7 @@ on-demand workflow. Do not claim it finds every regression.
    Do not leave the example calculator from `init` and describe it as an app check.
 3. Show the runner command and explain what it runs. Follow the project's existing
    approval policy. Only after the owner approves it, run
-   `node "${CLAUDE_PLUGIN_ROOT}/scripts/behavior.mjs" trust`. Approval includes running
-   the adapter in a separate checkout during a removal rehearsal. Runners are not
+   `node "${CLAUDE_PLUGIN_ROOT}/scripts/behavior.mjs" trust`. Runners are not
    sandboxed: use test data and no production credentials or services.
 4. Before the requested code change, capture with
    `node "${CLAUDE_PLUGIN_ROOT}/scripts/behavior.mjs" run "Before the change"`.
