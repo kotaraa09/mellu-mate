@@ -3,8 +3,8 @@
 // A beginner thinks in features - "the cart", "checkout", "sold out" - and the file tree shows
 // files. Claude keeps the list in docs/FEATURES.md (plan-feature adds a feature, build-task
 // keeps its files and tests up to date), and this pane draws it: each feature, a mark on the
-// ones whose files changed since the last saved version, and what a feature does when it is
-// pressed. Like the other panels it runs outside the model, so it adds nothing to a request.
+// ones whose files changed since the last saved version, a mark on the ones whose tests passed
+// after that change, and what a feature does when it is pressed. Like the other panels it runs outside the model, so it adds nothing to a request.
 //
 // The file, one feature a section:
 //
@@ -65,6 +65,39 @@ export function matches(pattern: string, path: string): boolean {
 export const isChanged = (f: Feature, changed: ReadonlyArray<string>): boolean =>
   changed.some((c) => [...f.files, ...f.tests].some((p) => matches(p, c)))
 
+// What the last check after a change covered, as scripts/verify.mjs records it: whether it
+// passed, the changed files it saw, and per step which tests ran - every test ("all", within
+// its "dir"), the listed files, or "unknown" where the test tool picked them.
+export const CHECKS_FILE = '.claude/mellu-checks/last.json'
+export type CheckStep = { name: string; dir?: string; passed: boolean; scope: 'all' | 'listed' | 'unknown'; tests?: string[] }
+export type Checks = { at: number; passed: boolean; changed: string[] | null; steps: CheckStep[] }
+
+export function parseChecks(text: string | null): Checks | null {
+  if (!text) return null
+  try {
+    const c = JSON.parse(text)
+    return c && typeof c.passed === 'boolean' && Array.isArray(c.steps) ? c : null
+  } catch { return null }
+}
+
+// The record speaks for the change on screen only when it saw exactly these changed files.
+// A file changed by hand after the check makes it stale, and then nothing is marked.
+export const coversNow = (c: Checks | null, changed: ReadonlyArray<string>): boolean =>
+  !!c && !!c.changed && changed.length > 0 && c.changed.length === changed.length &&
+  changed.every((p) => c.changed!.includes(p))
+
+const ranTest = (pattern: string, s: CheckStep): boolean => {
+  if (!s.passed) return false
+  if (s.scope === 'all') return !s.dir || pattern.replace(/^\.\//, '').startsWith(`${s.dir}/`)
+  return s.scope === 'listed' && (s.tests ?? []).some((t) => matches(pattern, t))
+}
+
+// Checked: nothing in it changed, the last check covered this change and passed, and every one
+// of its test files ran in a step that passed. A feature with no tests is never Checked.
+export const isChecked = (f: Feature, changed: ReadonlyArray<string>, c: Checks | null): boolean =>
+  !!c && c.passed && coversNow(c, changed) && f.tests.length > 0 && !isChanged(f, changed) &&
+  f.tests.every((p) => c.steps.some((s) => ranTest(p, s)))
+
 // The files git sees as changed since the last commit, new ones included. `git status
 // --porcelain` puts a rename as "old -> new"; the new name is the one that exists.
 export function changedFrom(porcelain: string): string[] {
@@ -87,11 +120,12 @@ export const register: Register = (on) => {
     const { Box, Text, Button } = $.ui.resolve(e)
     let root = ''
     try { root = await $.session.root() } catch { /* no project: the empty list below */ }
-    const [md, porcelain, name] = await Promise.all([
+    const [md, porcelain, name, checksText] = await Promise.all([
       $.fs.read(`${root}/${FEATURES_FILE}`).then(String, () => null),
       $.process.run(['git', 'status', '--porcelain', '--untracked-files=all'], { cwd: root, timeoutMs: 5000 })
         .then((r: any) => (r.exitCode === 0 ? String(r.stdout ?? '') : ''), () => ''),
       read($, picked),
+      $.fs.read(`${root}/${CHECKS_FILE}`).then(String, () => null),
     ])
     const features = md === null ? [] : parseFeatures(md)
     if (!features.length) {
@@ -111,12 +145,16 @@ export const register: Register = (on) => {
     }
     const changed = changedFrom(porcelain)
     const touched = features.filter((f) => isChanged(f, changed)).length
+    const checks = parseChecks(checksText)
+    const checked = features.filter((f) => isChecked(f, changed, checks)).length
+    const failedNow = !!checks && !checks.passed && coversNow(checks, changed)
     const open = features.find((f) => f.name === name) ?? null
     return (
       <Box flexDirection="column" paddingX={1} gap={1}>
         <Text color="subtle" wrap="wrap">
-          {`${features.length} features${touched ? ` · ${touched} changed since the last saved version` : ''}`}
+          {`${features.length} features${touched ? ` · ${touched} changed since the last saved version` : ''}${checked ? ` · ${checked} checked` : ''}`}
         </Text>
+        {failedNow && <Text color="error" wrap="wrap">The last check after this change failed, so nothing is marked Checked.</Text>}
         <Box flexDirection="column">
           {features.map((f) => {
             const isOn = isChanged(f, changed)
@@ -125,6 +163,7 @@ export const register: Register = (on) => {
                 <Button key={`b-${f.name}`} plain label={`${f.icon} ${f.name}`}
                   onPress={() => update($, picked, (cur) => (cur === f.name ? null : f.name))} />
                 {isOn && <Text color="suggestion">Changed</Text>}
+                {!isOn && isChecked(f, changed, checks) && <Text color="success">Checked</Text>}
               </Box>
             )
           })}
@@ -134,7 +173,9 @@ export const register: Register = (on) => {
             <Text bold wrap="wrap">{open.name}</Text>
             {open.about && <Text wrap="wrap">{open.about}</Text>}
             <Text color="subtle" wrap="wrap">
-              {isChanged(open, changed) ? 'Changed since the last saved version.' : 'Not changed since the last saved version.'}
+              {isChanged(open, changed) ? 'Changed since the last saved version.'
+                : isChecked(open, changed, checks) ? 'Not changed, and its tests passed after the last change.'
+                  : 'Not changed since the last saved version.'}
             </Text>
             <Text color="subtle" wrap="wrap">
               {open.tests.length ? `${open.tests.length} test ${open.tests.length === 1 ? 'file checks' : 'files check'} it after each change.` : 'No test checks it yet.'}
