@@ -43,6 +43,7 @@ Where it helps, it does more work and costs more: about $0.23 against $0.13 for 
 
 - Asks what you mean when a request like "make it better" can mean several things, says which meaning it would pick, and waits for your answer.
 - Writes a short plan and a task list before it builds a new feature, and builds nothing until you pick "start building".
+- Lists what the new feature must do in your words, marks what it guessed, and lets you tick what must work. Each line you tick gets a test.
 - Keeps the plan in `docs/STATE.md`, so a new session the next day knows what "finish the rest" means.
 - Runs the checks you approved on your computer after each change, and will not let Claude say "done" while one of them fails.
 - Suggests a free library before it hand-writes a calendar, a map or a chart.
@@ -51,6 +52,7 @@ Where it helps, it does more work and costs more: about $0.23 against $0.13 for 
 - Stops a commit that would save an API key or a password, and says which file the key is in.
 - Answers in your language and in plain words; `/mellu:plain off` turns the plain words off.
 - Shows its progress in a bar above the prompt, and puts each feature on a button in a control panel.
+- Lists your app feature by feature in a "Your app" panel, and marks the features that changed since your last saved version.
 - Says what a request usually costs while you type it, before you send it: dollars, minutes and, on a Claude plan, the share of your 5-hour limit. After the request, the bar shows the real cost beside that range.
 
 <details>
