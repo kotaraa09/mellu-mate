@@ -805,3 +805,40 @@ test('language: verify.mjs holds a turn in one place only', () => {
   assert(exits.length === 1 && writes.length === 1,
     `found ${exits.length} exit(2) and ${writes.length} stderr writes - send every hold through hold(), so it gets the user's language.`);
 });
+
+// --- what the last check covered -------------------------------------------------
+// The "Your app" panel marks a feature Checked from this record (hooks/features.tsx), so it
+// must say what ran and how it went, and stay out of every saved version.
+const lastChecks = (dir) => JSON.parse(readFileSync(join(dir, '.claude', 'mellu-checks', 'last.json'), 'utf8'));
+
+test('checks record: a whole run counts every test, a related run does not say which', async () => {
+  const p = relatedProject();
+  p.edit('src/a.js');
+  await p.stopNow();
+  let c = lastChecks(p.dir);
+  assert(c.passed === true && c.steps[0].scope === 'unknown', `a {files} run cannot name its tests: ${JSON.stringify(c)}`);
+  assert(c.changed.includes('src/a.js'), `the record names the changed file: ${JSON.stringify(c.changed)}`);
+  p.edit('package.json');
+  await p.stopNow();
+  c = lastChecks(p.dir);
+  assert(c.steps[0].scope === 'all', `the whole command covers every test: ${JSON.stringify(c)}`);
+  const status = spawnSync('git', ['status', '--porcelain', '--untracked-files=all'], { cwd: p.dir, encoding: 'utf8' }).stdout;
+  assert(!/mellu-checks/.test(status), `the record must stay out of git:\n${status}`);
+});
+
+test('checks record: a failing run is recorded as failed', async () => {
+  const p = relatedProject({ related: FAILS_RELATED });
+  p.edit('src/a.js');
+  const r = await p.stopNow();
+  assert(r.code === BLOCK, `the related failure blocks:\n${r.out}`);
+  const c = lastChecks(p.dir);
+  assert(c.passed === false && c.steps[0].passed === false, `the record says it failed: ${JSON.stringify(c)}`);
+});
+
+test('related: a whole run that fails is not reported as a related run', async () => {
+  const p = relatedProject({ cmd: FAILS });
+  p.edit('package.json');
+  const r = await p.stopNow();
+  assert(r.code === BLOCK, `the whole command fails and blocks:\n${r.out}`);
+  assert(!/\(related\)|ran only the tests/.test(r.stderr), `a whole run must not be called related:\n${r.stderr}`);
+});

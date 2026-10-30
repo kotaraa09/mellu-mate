@@ -14,7 +14,7 @@
 // talked out of a block.
 //
 // No dependencies: node: builtins only, same rule as validate.mjs.
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { join, isAbsolute } from 'node:path';
 import { treeFingerprint, lastSeen, remember } from './tree-state.mjs';
@@ -182,10 +182,50 @@ function relatedFiles(step, changed, docsOnly) {
   return narrow ? files : null;
 }
 
+// "narrow" marks a step that ran its "related" command. The step keeps its "related" setting
+// either way, so that alone cannot say which command ran.
 const narrowed = (step, changed, docsOnly) => {
   const files = relatedFiles(step, changed, docsOnly);
-  return files ? { ...step, cmd: step.related.split(/\{(?:files|tests)\}/).join(files.join(' ')), related: true } : step;
+  if (!files) return step;
+  const cmd = step.related.split(/\{(?:files|tests)\}/).join(files.join(' '));
+  // Which tests ran is known only for {tests}; under {files} the test tool picks them.
+  return { ...step, cmd, narrow: true, ...(step.related.includes('{tests}') ? { tests: files.map((f) => (step.dir ? `${step.dir}/${f}` : f)) } : {}) };
 };
+
+// --- what the last check covered ---------------------------------------------
+// The "Your app" panel (hooks/features.tsx) marks a feature Checked when nothing in it
+// changed and its tests passed at the last check after a change. It cannot run anything
+// itself, so each check leaves this record: whether it passed, the changed files it saw, and
+// for each step that ran, which tests it ran - every test (no list), the listed test files of
+// a {tests} run, or unknown for a {files} run, where the test tool picks them.
+// In a folder of its own with a .gitignore of "*", as the cost history is: never in a version.
+const CHECKS_DIR = '.claude/mellu-checks';
+
+function checksRecord(results, changedAll, at) {
+  return {
+    at,
+    passed: !results.some((r) => r.result === FAIL),
+    changed: changedAll,
+    steps: results.filter((r) => r.result !== UNRUNNABLE).map((r) => ({
+      name: r.name,
+      ...(r.dir ? { dir: r.dir } : {}),
+      passed: r.result === PASS,
+      scope: !r.narrow ? 'all' : r.tests ? 'listed' : 'unknown',
+      ...(r.tests ? { tests: r.tests } : {}),
+    })),
+  };
+}
+
+function saveChecks(results) {
+  try {
+    const r = spawnSync('git', ['status', '--porcelain', '--untracked-files=all'], { cwd: root, encoding: 'utf8', maxBuffer: 32 * 1024 * 1024 });
+    const changedAll = r.status === 0 ? r.stdout.split(/\r?\n/).filter((l) => l.length > 3).map((l) => l.slice(3).split(' -> ').pop().replace(/^"|"$/g, '')) : null;
+    const dir = join(root, CHECKS_DIR);
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(join(dir, '.gitignore'), '# Mellu.mate: what the last check covered. Never saved in a version.\n*\n');
+    writeFileSync(join(dir, 'last.json'), JSON.stringify(checksRecord(results, changedAll, Date.now())));
+  } catch { /* the panel then shows no Checked mark; the check itself is unaffected */ }
+}
 
 function loadConfig() {
   if (!existsSync(CONFIG)) return null;
@@ -481,6 +521,7 @@ if (HOOK) {
       'turn ends here. This work is not verified.');
   }
   remember(root, { session, tree, failed: failedNames });
+  saveChecks(results);
 
   if (!failed.length) {
     allowAfterLook(unrunnable.length
@@ -493,10 +534,10 @@ if (HOOK) {
   const report = [
     `Verification failed. ${failed.length} of ${results.length} ${heldBack ? 'fast-tier ' : ''}step(s) in .claude/verify.json did not pass.`,
     ...(heldBack ? [`(${heldBack} full-tier step(s) were not run - those go at the end of a task, not every turn.)`] : []),
-    ...(failed.some((r) => r.related) ? ['(A step marked "related" ran only the tests that use the changed files.)'] : []),
+    ...(failed.some((r) => r.narrow) ? ['(A step marked "related" ran only the tests that use the changed files.)'] : []),
     '',
     ...failed.map((r) => [
-      `[${r.name}]${r.related ? ' (related)' : ''} ${r.cmd} - ${r.why}`,
+      `[${r.name}]${r.narrow ? ' (related)' : ''} ${r.cmd} - ${r.why}`,
       tail(r.output),
       '',
     ].join('\n')),
@@ -612,6 +653,7 @@ for (const step of selected) {
 
 const failed = results.filter((r) => r.result === FAIL);
 const unrunnable = results.filter((r) => r.result === UNRUNNABLE);
+saveChecks(results);
 
 for (const r of failed) {
   console.log(`\n--- ${r.name} ---\n${tail(r.output)}`);
