@@ -14,6 +14,8 @@ import type { Register } from 'claude-code'
 
 import type { Request, Step, Usage, Waiting } from '../types'
 import { clearHeld, clearHistory, clearOnStart, clearOnTurnEnd, holdText } from './clear-reminder'
+import { afterFigures, moneyRange } from './estimate'
+import { atEnd, atSubmit, cancelDraft, draftChanged } from './estimate-hooks'
 import { HELPERS_DESCRIPTION, helperEnded } from './savvy-progress/register'
 import { ASK_CLAUDE, CHECK_EVERY_MS, PLUGIN_STEP, RELEASES, installedFrom, latestFrom, newer, updateSteps } from './update'
 
@@ -464,11 +466,13 @@ const refresh = async ($: any, atStart: boolean) => {
   if (r.endedAt !== null) clearOnTurnEnd(u.contextTokens)
   const spent = u.costUsd !== null && r.costAtStart !== null ? u.costUsd - r.costAtStart : null
   const waiting = r.waiting?.length ?? 0
+  // The estimate shown before the request rides beside its cost (hooks/estimate.ts).
+  const usual = r.estimate ? ` (usual ${moneyRange(r.estimate.usd)})` : ''
   $.ui.status(r.endedAt === null
-    ? `Mellu.mate: ${stepLine(r.steps) ?? r.recent?.[r.recent.length - 1] ?? `${r.tools} actions`} · ${money(spent)}`
+    ? `Mellu.mate: ${stepLine(r.steps) ?? r.recent?.[r.recent.length - 1] ?? `${r.tools} actions`} · ${money(spent)}${usual}`
     : waiting
-      ? `Mellu.mate: waiting for ${waiting === 1 ? r.waiting?.[0]?.label : `${waiting} background tasks`} · ${money(spent)}`
-      : `Mellu.mate: last request ${money(spent)}, ${duration(r.endedAt - r.startedAt)}`)
+      ? `Mellu.mate: waiting for ${waiting === 1 ? r.waiting?.[0]?.label : `${waiting} background tasks`} · ${money(spent)}${usual}`
+      : `Mellu.mate: last request ${spent === null ? money(spent) : afterFigures(spent, r.estimate)}, ${duration(r.endedAt - r.startedAt)}`)
 }
 
 // The request's title: the person's own words. The desktop app wraps pasted text in
@@ -493,6 +497,9 @@ const startRequest = async ($: any, said: string) => {
   await update($, request, () => r)
   $.ui.status('Mellu.mate: working')
   refreshLater($, true)
+  // The estimate the user saw while typing, kept on the request for the figures after it.
+  // In the background: it reads the history file the first time.
+  void atSubmit($, said).then((x) => inOrder(() => update($, request, (cur) => (cur && cur.startedAt === now ? { ...cur, ...x } : cur))))
 }
 
 // One tool call of the main loop, counted against the request in progress.
@@ -529,10 +536,19 @@ const resumeRequest = async ($: any) => {
 
 // An interrupted turn has no Stop to say what still runs, and the person stopped it: it is
 // not left saying Waiting.
+// What the request cost is kept on it, for the bar, and joins the project's history of
+// requests (hooks/estimate-hooks.ts); read in the background, so the turn ends at once.
 const endRequest = async ($: any, aborted = false) => {
   const now = await $.clock.now()
   await update($, request, (r) => (r ? { ...r, endedAt: now, ...(aborted ? { waiting: [] } : {}) } : r))
   refreshLater($, false)
+  void (async () => {
+    const [u, r] = await Promise.all([readUsage($), read($, request)])
+    if (!r || r.endedAt !== now) return
+    const spentUsd = u.costUsd !== null && r.costAtStart !== null ? u.costUsd - r.costAtStart : null
+    await inOrder(() => update($, request, (cur) => (cur && cur.endedAt === now ? { ...cur, spentUsd } : cur)))
+    await atEnd($, r, spentUsd, now, aborted)
+  })().catch(() => undefined)
 }
 
 const openControls = async ($: any) => {
@@ -571,7 +587,18 @@ export const register: Register = (on) => {
   // request back by about a second, and the state write alone by 0.4s. No response has
   // arrived yet, so the cost read a moment later is still the starting cost. The /clear
   // reminder reads files only on the one message it holds.
+  // Each change to the draft: once it settles, the status line says what a request like it
+  // usually costs, before the user presses Enter (hooks/estimate-hooks.ts).
+  on('prompt.edit', async ($, e, next) => {
+    const box = await next(e)
+    draftChanged($, box.text,
+      async () => { const r = await read($, request); return r !== null && r.endedAt === null },
+      () => { void read($, request).then((r) => (r ? refreshLater($, false) : $.ui.status(undefined))) })
+    return box
+  })
+
   on('prompt.submit', async ($, e, next) => {
+    cancelDraft()
     const text = typeof e.text === 'string' ? e.text : ''
     // Only a person's own message is held: a helper's report or a scheduled prompt cannot be
     // sent again. A test's submission carries no origin.

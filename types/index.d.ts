@@ -29,6 +29,48 @@ export type Request = {
   // listed it at the Stop. While any is left the request is waiting, not done. A dev server
   // is left out: it runs until someone stops it.
   waiting?: Waiting[]
+  // The kind of request its words read as, and the estimate shown for it before it began
+  // (hooks/estimate.ts); null when there was none.
+  kind?: Kind | null
+  estimate?: ShownEstimate | null
+  // The 5-hour window when it began, for its share of the limit at the end.
+  limitAtStart?: LimitReading | null
+  // What it cost once it ended; the bar shows it beside the estimate.
+  spentUsd?: number | null
+}
+
+// What kind of request the words read as: hooks/estimate.ts.
+export type Kind = 'bug' | 'feature' | 'page' | 'rename' | 'question' | 'other'
+
+// One rate-limit window as the session reports it (`$.session.usage().rateLimits`).
+export type LimitReading = {
+  kind: string
+  percentUsed: number
+  resetsAt?: string
+}
+
+// The range shown before a request: from the project's own requests of the kind, or from the
+// benchmark's runs while it has fewer than five. Each range is [low, high].
+export type ShownEstimate = {
+  kind: Kind
+  source: 'own' | 'tests'
+  count: number
+  usd: [number, number]
+  ms: [number, number]
+  // The share of the 5-hour limit, in points; only from the project's own requests.
+  fiveHour: [number, number] | null
+}
+
+// One finished request, as .claude/mellu-costs/requests.json keeps it.
+export type PastRequest = {
+  // When it began: a request that ran again after background work replaces its own entry.
+  at: number
+  kind: Kind
+  usd: number
+  ms: number
+  model: string
+  // Its share of the 5-hour limit, in points; null off a subscription or across a reset.
+  fiveHour: number | null
 }
 
 export type Waiting = {

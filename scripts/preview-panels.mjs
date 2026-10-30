@@ -30,7 +30,7 @@ const NAME = 'mellu-preview';
 const mod = join(target, NAME);
 
 // Mellu.mate's hooks module: the entry and the files it starts.
-const FILES = ['register.tsx', 'panels.tsx', 'clear-reminder.ts', 'savvy-progress/register.tsx'];
+const FILES = ['register.tsx', 'panels.tsx', 'clear-reminder.ts', 'savvy-progress/register.tsx', 'estimate.ts', 'estimate-hooks.ts', 'estimate-defaults.ts', 'tools-check.ts', 'update.ts'];
 const swaps = [
   [/plugin: 'mellu'/g, `plugin: '${NAME}'`],
   [/'mellu-controls'/g, `'${NAME}-controls'`],
@@ -52,17 +52,22 @@ let source = sources['panels.tsx'];
 // Preview only: /mellu-preview-demo fills the progress bar with a sample request, so
 // the step bar and the step marks can be looked at in a session where Claude keeps no step
 // list. `/mellu-preview-demo waiting` shows the same request after its turn ended, with a
-// test run still going in the background. The released plugin never has this command.
+// test run still going in the background, and `/mellu-preview-demo done` the same request
+// finished, its cost beside the estimate shown before it. The released plugin never has this
+// command.
 const REGISTER = `await $.command.register({ name: '${NAME}', `;
 if (!source.includes(REGISTER)) throw new Error('hooks/panels.tsx: no command.register line to add the demo beside');
 source = source.replace(REGISTER, `await $.command.register({ name: '${NAME}-demo', description: 'Fill the preview progress bar with a sample request' })\n    ${REGISTER}`);
 const DEMO = `
   on('command.run', { command: '${NAME}-demo' }, async ($, e) => {
     const waiting = /waiting/.test(String(e.args ?? ''))
+    const done = /done/.test(String(e.args ?? ''))
     const now = await $.clock.now()
     const u = await readUsage($)
     await update($, request, () => ({
-      text: 'Make a website for my bakery', startedAt: now - 134000, endedAt: waiting ? now - 2000 : null, tools: 14,
+      text: 'Make a website for my bakery', startedAt: now - 134000, endedAt: waiting || done ? now - 2000 : null, tools: 14,
+      kind: 'feature', estimate: { kind: 'feature', source: 'own', count: 9, usd: [0.22, 0.48], ms: [90000, 240000], fiveHour: [2, 5] },
+      ...(done ? { spentUsd: 0.42 } : {}),
       waiting: waiting ? [{ id: 'w1', label: 'Run the tests' }] : [],
       recent: ['Read STATE.md', 'Wrote index.html', 'Changed style.css', 'Ran the checks', 'Changed page2.html'],
       costAtStart: u.costUsd === null ? null : Math.max(0, u.costUsd - 0.42),
@@ -70,9 +75,9 @@ const DEMO = `
         { id: 'd1', title: 'Read the plan', doing: 'Reading the plan', status: 'completed' },
         { id: 'd2', title: 'Set up the project', doing: 'Setting up the project', status: 'completed' },
         { id: 'd3', title: 'Build page 1', doing: 'Building page 1', status: 'completed' },
-        { id: 'd4', title: 'Build page 2', doing: 'Building page 2', status: 'in_progress' },
-        { id: 'd5', title: 'Add the contact form', doing: 'Adding the contact form', status: 'pending' },
-        { id: 'd6', title: 'Check every page', doing: 'Checking every page', status: 'pending' },
+        { id: 'd4', title: 'Build page 2', doing: 'Building page 2', status: done ? 'completed' : 'in_progress' },
+        { id: 'd5', title: 'Add the contact form', doing: 'Adding the contact form', status: done ? 'completed' : 'pending' },
+        { id: 'd6', title: 'Check every page', doing: 'Checking every page', status: done ? 'completed' : 'pending' },
       ],
     }))
     await update($, usage, () => u)

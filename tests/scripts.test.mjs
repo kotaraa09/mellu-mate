@@ -1363,3 +1363,45 @@ test('session timeline: finds the project folder, lists newest first, and keeps 
   assert(t === '1. user: add a sold-out option\n2. claude: I will add it.\n3.   Edit: index.html\n4.   failed: old_string not found',
     `the timeline must keep the user's own words, the reply, the call and the failure, and nothing else:\n${t}`);
 });
+
+// --- the cost estimate ---------------------------------------------------------
+// hooks/estimate.ts copies prompt-check.mjs's bug and feature tests: a hooks module has no
+// Node, and prompt-check.mjs loads node:fs. A change to one alone fails here.
+test('estimate: its bug and feature tests answer as prompt-check.mjs does', async () => {
+  const hook = await import('../scripts/prompt-check.mjs');
+  const estimate = await import('../hooks/estimate.ts');
+  const outcomes = join(repoRoot, 'evals', 'outcomes');
+  const tasks = (await import('node:fs')).readdirSync(outcomes)
+    .map((t) => { try { return readFileSync(join(outcomes, t, 'prompt.md'), 'utf8').replace(/^---[\s\S]*?\n---\s*/, ''); } catch { return ''; } })
+    .filter(Boolean);
+  for (const p of [...tasks, 'the checkout breaks when there is no code', 'The tests keep failing', "it doesn't work",
+    'there is an error on the cart page', 'หน้าเช็คเอาท์พัง', 'ปุ่มจ่ายเงินใช้ไม่ได้', 'งานที่ค้างอยู่', 'add shipping for orders under $50',
+    'rename the shop', 'keep going', 'ship it', 'is this safe to make public?', '/mellu:cheap fix the error',
+    'add an error message when the email is empty', 'Add to cart gives an error', 'let shoppers save a wishlist',
+    'can you add a test for the cart?', 'add comments to checkout.js', 'เพิ่มปุ่มสินค้าหมด', 'อยากให้มีระบบสมาชิก',
+    '<system-reminder>it fails</system-reminder>add a page']) {
+    assert(hook.looksLikeBug(p) === estimate.looksLikeBug(p), `bug test differs on: ${p}`);
+    assert(hook.asksForFeature(p) === estimate.asksForFeature(p), `feature test differs on: ${p}`);
+  }
+});
+
+// The table of test runs prices each run at the user's model, so it must hold the tokens the
+// trace reports, with an hour's cache writes apart from five minutes'.
+test('cost-defaults: a trace gives its time, the main model tokens and what helpers cost', async () => {
+  const { traceFigures } = await import('../scripts/cost-defaults.mjs');
+  const { priced } = await import('../hooks/estimate.ts');
+  const trace = [
+    JSON.stringify({ type: 'system', subtype: 'init' }),
+    JSON.stringify({ type: 'result', duration_ms: 90_000, total_cost_usd: 0.50126, modelUsage: {
+      'claude-sonnet-5': { inputTokens: 30, outputTokens: 10_000, cacheReadInputTokens: 1_000_000, cacheCreationInputTokens: 50_000,
+        cacheCreationEphemeral5mInputTokens: 0, cacheCreationEphemeral1hInputTokens: 50_000, costUSD: 0.50006 },
+      'claude-haiku-4-5': { inputTokens: 10, outputTokens: 100, costUSD: 0.0012 },
+    } }),
+  ].join('\n');
+  const f = traceFigures(trace);
+  assert(f.ms === 90_000 && f.otherUsd === 0.0012, `time and helpers: ${JSON.stringify(f)}`);
+  assert(f.tokens.join() === '30,10000,1000000,0,50000', `tokens: ${f.tokens}`);
+  const usd = priced('claude-sonnet-5', { kind: 'bug', ...f });
+  assert(Math.abs(usd - 0.50126) < 0.0001, `priced as the trace reports it: ${usd}`);
+  assert(traceFigures('not json') === null, 'a trace with no result has no figures');
+});

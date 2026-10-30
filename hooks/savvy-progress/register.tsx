@@ -10,6 +10,7 @@ import type { EngineInterface, Register } from 'claude-code'
 
 import type { AgentRun, Panel, Request, Step } from '../../types'
 import { clearOnStep } from '../clear-reminder'
+import { afterFigures } from '../estimate'
 
 // Written by hooks/panels.tsx; read here.
 const request = atom({ plugin: 'mellu', key: 'request' } as const, null)
@@ -41,6 +42,8 @@ export type Flow = {
   // Actions so far, and how long it took once finished: the bar's right-hand figure.
   tools: number
   tookMs: number | null
+  // Once finished: what it cost, beside the estimate shown before it (hooks/estimate.ts).
+  cost?: string
 }
 
 const s = {
@@ -90,6 +93,7 @@ export const flowOf = (r: Request | null, p: Pick<Panel, 'dismissedAt'>): Flow |
     waiting: r.endedAt !== null ? (r.waiting?.length ?? 0) : 0,
     tools: r.tools,
     tookMs: r.endedAt === null || r.waiting?.length ? null : r.endedAt - r.startedAt,
+    cost: r.endedAt !== null && !(r.waiting?.length) && typeof r.spentUsd === 'number' ? afterFigures(r.spentUsd, r.estimate) : undefined,
   }
 }
 
@@ -109,7 +113,7 @@ const took = (ms: number): string => {
 
 // The figure at the bar's right end: the time it took, the share done, or the actions so far.
 export const side = (f: Flow): string =>
-  f.tookMs !== null ? took(f.tookMs) : f.waiting ? `${f.waiting} ${tr().inBackground}` : f.total ? `${Math.round(ratio(f) * 100)}%` : f.tools ? `${f.tools} actions` : ''
+  f.tookMs !== null ? (f.cost ? `${f.cost} · ${took(f.tookMs)}` : took(f.tookMs)) : f.waiting ? `${f.waiting} ${tr().inBackground}` : f.total ? `${Math.round(ratio(f) * 100)}%` : f.tools ? `${f.tools} actions` : ''
 
 // Deterministic noise so the dither does not shimmer between redraws.
 const noise = (x: number, y: number): number => {
@@ -150,9 +154,12 @@ const fitText = (s: string, size: number, maxW: number): string => {
 
 const rowSvg = (f: Flow, W: number, isWorking: boolean): string => {
   // The title takes what it needs, up to 40% of the row; the bar takes the rest.
-  const title = fitText(f.title, 13, Math.max(60, W * 0.4))
+  // The figure at the right takes what it needs: a cost beside its estimate is long.
+  const percent = side(f)
+  const sideW = Math.max(46, Math.ceil(textWidth(percent, 12.5)) + 14)
+  const title = fitText(f.title, 13, Math.max(60, Math.min(W * 0.4, W - sideW - CRAB_W - 72)))
   const BAR_X = Math.round(16 + textWidth(title, 13) + 12)
-  const BAR_W = Math.max(60, W - BAR_X - 46 - CRAB_W)
+  const BAR_W = Math.max(60, W - BAR_X - sideW - CRAB_W)
   const color = f.isFinished ? DONE : ACCENT
   const y0 = (H - BAR_H) / 2
   const fillW = Math.round(BAR_W * ratio(f))
@@ -185,7 +192,6 @@ const rowSvg = (f: Flow, W: number, isWorking: boolean): string => {
   const text = label(f)
   const pillW = Math.round(18 + text.length * 6.6)
   const pillX = Math.max(0, Math.min(BAR_W - pillW, fillW - pillW))
-  const percent = side(f)
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
 <style>
@@ -210,7 +216,7 @@ const rowSvg = (f: Flow, W: number, isWorking: boolean): string => {
 <rect x="${pillX}" width="${pillW}" height="${BAR_H}" rx="${BAR_H / 2}" fill="${color}"/>
 <text x="${pillX + pillW / 2}" y="${BAR_H / 2 + 4}" text-anchor="middle" font-family="${FONT}" font-size="11" font-weight="600" fill="#ffffff">${xml(text)}</text>
 </g>
-<text class="m" x="${W - CRAB_W - 6}" y="${H / 2 + 4.5}" text-anchor="end" font-family="${FONT}" font-size="12.5" font-variant-numeric="tabular-nums">${percent}</text>
+<text class="m" x="${W - CRAB_W - 6}" y="${H / 2 + 4.5}" text-anchor="end" font-family="${FONT}" font-size="12.5" font-variant-numeric="tabular-nums">${xml(percent)}</text>
 ${CRAB_CSS}${crab(W - CRAB_W + 1, 0, 'other', false, isWorking, 0.8)}
 </svg>`
 }
@@ -998,7 +1004,8 @@ export const register: Register = on => {
 
     const cols = e.props.bodyColumns
     const titleW = Math.max(8, Math.min(30, f.title.length + 2, Math.floor(cols / 3)))
-    const width = Math.max(6, Math.min(40, cols - titleW - 32))
+    // The figure is long once it carries a cost beside its estimate; the bar gives way.
+    const width = Math.max(6, Math.min(40, cols - titleW - 22 - figure.length))
     return (
       <Box flexDirection="column">
         {rest}
