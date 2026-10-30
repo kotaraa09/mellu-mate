@@ -1,6 +1,6 @@
 # Evals
 
-Nineteen cases that check **which skill fires on which sentence**, run by `claude plugin eval`.
+Twenty cases that check **which skill fires on which sentence**, run by `claude plugin eval`.
 Fifteen more, in [`outcomes/`](outcomes/), check **whether the result works**. See
 [the outcome benchmark](#the-outcome-benchmark).
 
@@ -37,6 +37,7 @@ landing on `build-task` instead. Nothing goes red. Only a behavioural test catch
 | `skills-for-a-godot-game` | *"/mellu:skills"*, in a Godot project | it works out the project is a game, offers game skills, installs nothing |
 | `kickoff-offers-godot-skills` | setup in a Godot project, answered in one message | the close offers at most two Godot skills, with a cost in tokens |
 | `plan-offers-two-ways` | *"let shoppers save their delivery address so they don't type it every time"* | `plan-feature` fires, and offers two ways to build it in plain words, recommends one, and asks |
+| `plan-agrees-what-must-work` | *"add a sold-out option for plants"* | `plan-feature` fires, lists what must work in plain words with the refusal at checkout, marks its guesses, and asks the user to agree. 2026-10-30: 3/3 with Mellu.mate, 1/3 without, $0.93 |
 
 Every case carries a `tool_used` grader (did the skill fire) and an `llm` grader (did the
 reply help). Under the default ablation the first is an indicator, not part of the score,

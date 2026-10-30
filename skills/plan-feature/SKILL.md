@@ -59,6 +59,16 @@ usual cases: "keep it on this computer only (an hour; lost if they clear the bro
 "save it on a server (a day; works on every device)". A small feature has one sensible way; do
 not invent a second. This is Feature Dev's design step, cut to two options a beginner can weigh.
 
+**Agree what it must do.** Write two to six short lines that start "You can..." or "A shopper
+can...", each one thing the user will be able to see or do when the feature is done, in their
+words. Include what must be **refused** or **kept**, not only what is shown: in the sold-out
+benchmark task, beginners got a "sold out" label that a shopper could still buy past. Mark
+each line the user did not say with "(my guess)". Ask about them as one question in the form,
+`multiSelect`, one option a line, header `Must work`: "Which of these must work? Tick every one
+you want." More than four lines go in two questions. Skip this question for a request that
+already lists what it must do. A line the user does not tick goes under **Not doing**; a line
+they add through "Other" is agreed like the rest.
+
 **Every form ends with the ready question**, header exactly `Ready?` in English: is the plan
 clear enough to start building? First option "yes, start", second "not yet, I have more to
 say", in the user's language. Only the user ends the questions, with that first option. On any
@@ -77,7 +87,8 @@ Append to `docs/STATE.md` under `## Next` — not a separate file, so it stays w
 ```markdown
 ### <feature name>
 **Goal:** <one sentence, in user terms>
-**Done when:** <observable behaviour — what the user can do that they couldn't before>
+**Must work:** (agreed <date>)
+- <each line the user kept from the form, in their words>
 **Not doing:** <explicit non-goals, so scope can't drift>
 
 - [ ] <task 1 — a vertical slice that runs>
@@ -90,6 +101,7 @@ Rules for the task list:
 - Each task is a **vertical slice that runs when it's done** — not "write the model", "write the view", "wire it up".
 - Three to six tasks. More means the feature needs splitting.
 - If a task can't be verified, say how it will be checked by hand.
+- Every **Must work** line belongs to one task. build-task turns each line into a test.
 
 ## 5. Stop
 
