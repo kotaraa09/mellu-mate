@@ -15,6 +15,7 @@ Read `docs/STATE.md`. If the user said which work they mean — "the rest of wha
 ## 2. Build it as a slice
 
 - Before the first change, write this task's steps into your task list (TodoWrite or TaskCreate), in plain words the user understands, and mark each one in progress and done as you go. The user follows them in the progress panel; with no list it could only say "working", then "done".
+- If the feature has a **Must work** list in `docs/STATE.md`, take the lines this task covers. Before you build, write one test for each line that the project's checks run, run it once, and see it fail. A line no test can reach, such as how a page looks, gets the steps to check it by hand in your report. The user agreed to these lines; the task is not done while one of them fails.
 - Make it run end to end, however thinly. A task is not done if it needs a later task to be observable.
 - Follow the existing code's conventions over your own preferences — naming, file layout, error handling, comment density.
 - Reuse what's there. Search before you write: a duplicate implementation is worse than an ugly reused one.
