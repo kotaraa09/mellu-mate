@@ -38,48 +38,20 @@ step, including a skill-only arm. Source extraction still needs a separate reade
 selective removal supports recorded linear commits and stops on conflicts. Native
 panels and automatic scenario discovery are not part of this first version.
 
+**Rule tracing on a long PDF, 2026-10-30.** `outcome-character-rules-pdf` puts 25 rules
+in a 31-page rule book, graded rule by rule. Its first runs (6, $7.23) seemed to lose the
+three skill rules in 4 of 6 runs. One run with `/mellu:rules-trace` and a shell, by hand
+with `claude -p` since the Windows runner grants none, showed why: the skill logic was
+right, but the sheet field was a list, and the book never said its shape. The short
+`RULES.md` did. The book now states it, so those first runs do not count. That run
+($2.36, 22 of 25) recorded 44 rules and 41 context spans covering every line, but linked
+no rule to an example, kept the demo scenarios from `init`, and still reported done:
+nothing makes Claude run `rules-check` before it ends a turn. **Next:** rerun both arms on
+the corrected book, 3 runs each, about $10.
+
 ## Now: small and cheap
 
 Each item here is a few days at most, and costs a few dollars of runs or none.
-
-### 11. A requirements ledger, so no rule is left out
-
-**Why.** On a long rule set, Claude builds most rules and leaves some out, then says it is
-done. A user who wanted every rule of a character creator (origin, origin feature, class,
-subclass, attributes, background) asked five times or more. A general review does not catch
-this: item 7 never helped. A question about one named rule is harder to skip.
-
-**What.** Three parts, in order:
-
-1. Before any code, Claude writes every rule of the request as a numbered list in the
-   project, and the user checks the list one time.
-2. Each item names its proof: a test, or the place in the code. An item with no proof
-   stays open.
-3. A Stop hook, plain code and not a model, keeps the turn going while an item is open.
-
-Optional, after the three parts are measured: a cheap model answers one yes/no question
-for each item.
-
-**The test project is new.** No existing user project is used or copied. A new outcome
-task, `outcome-character-rules`: a short rules document for a character creator with about
-25 rules that depend on each other, and one hidden test for each rule. The rules are made
-up, not D&D, so Claude cannot fill a gap from memory; it must read them.
-
-**The task is built, 2026-10-28.** The free tests prove each rule fails on the starter
-code, all 25 pass on a creator that follows the rule book, and leaving out one rule fails
-that rule alone. No paid run yet.
-
-**Next: the rule book as a long PDF, built 2026-10-29.** The user's own case had the rules
-in a long source, a web page, and they suspect the reading: a long document comes back
-summarised, so Claude builds a skeleton. `outcome-character-rules-pdf` puts the same 25
-rules in a 31-page PDF, among lore and long tables, with three rules only in the appendix.
-The free tests pass; no paid run yet. A web page is not covered: the benchmark has no web
-access, and the fetch tool summarises a page before Claude sees it, which a later task
-could stand in for.
-
-**Done when.** The task runs 5 times in each arm, before and after the ledger, and the
-number of rules built of 25 is stated for each. **Effort:** 1 day for the task, 2-3 days for
-the ledger, about $15 of runs.
 
 ### Test speed of Mellu.mate itself
 

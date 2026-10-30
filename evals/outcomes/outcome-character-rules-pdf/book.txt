@@ -304,7 +304,7 @@ A hero's name has its spaces taken off both ends. Then it has 1 to 20 characters
 
 The character sheet has these fields: name, level, origin, className, subclass, background, scores, modifiers, proficiency, hp, defense, speed, resistances, features, skills and spellSlots.
 
-The field subclass holds the hero's path, or nothing (null) for a hero below level 3. The fields scores and modifiers each have one entry for each of the four scores. The field hp holds the hit points. The field resistances is a list, such as fire, or an empty list. The field features is a list in the order from Chapter 4. The field skills has one entry for each skill the hero has, with its bonus, such as Lore 4, Insight 2 and Athletics 5. The field spellSlots is 0 for a hero who has no spell slots.
+The field subclass holds the hero's path, or nothing (null) for a hero below level 3. The fields scores and modifiers each have one entry for each of the four scores. The field hp holds the hit points. The field resistances is a list, such as fire, or an empty list. The field features is a list in the order from Chapter 4. The field skills is an object with one entry for each skill the hero has and no others: the skill name, then its bonus, such as { Lore: 4, Insight: 2, Athletics: 5 }. The field spellSlots is 0 for a hero who has no spell slots.
 
 # Appendix B: Clarifications
 
