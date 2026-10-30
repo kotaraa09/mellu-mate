@@ -153,6 +153,8 @@ declare module 'claude-code' {
       pressed: Pressed | null
       // Whether the control panel asks "Start a fresh conversation?" before /clear.
       clearAsk: boolean
+      // The feature whose details show in "Your app" (hooks/features.tsx), by name.
+      featurePicked: string | null
       // A newer release, and how its update went.
       update: UpdateInfo
     }

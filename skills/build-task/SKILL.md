@@ -46,6 +46,7 @@ If you cannot make it pass after a genuine attempt, stop and say exactly what's 
 
 - Move the task to `## Done` with a one-line note of what changed.
 - **Keep `## Done` to the ten most recent.** If your entry pushes older ones out, append them to `docs/CHANGELOG.md` — newest first, create it if it doesn't exist. Move them, never delete them. STATE.md is read at the start of every session and again by every skill that touches state, so an unbounded `## Done` is a tax on every session after this one.
+- If `docs/FEATURES.md` exists, bring this feature's `- files:` and `- tests:` lines up to date with what the task added. The panel "Your app" marks a feature as changed from them.
 - Anything you skipped, hardcoded, or stubbed goes under `## Debt`, specifically enough to act on later.
 - Write every entry in the user's language, as the rest of `docs/STATE.md` is. The opener reads `## Debt` back to them, so lead with the effect they would notice, and put file names after it.
 - **If `## Debt` passes ten entries, say so once in your report.** The fix is to promote a few into `## Next` or drop them deliberately, not to keep appending — a list nobody triages is a slower way of forgetting. Don't start paying it down uninvited.

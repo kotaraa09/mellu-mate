@@ -47,7 +47,7 @@ export type Flow = {
 }
 
 const s = {
-  pane: 'Mellu.mate: progress',
+  pane: '◔',
   cost: 'Cost',
   tokens: 'Tokens',
   time: 'Time',

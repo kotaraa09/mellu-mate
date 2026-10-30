@@ -38,6 +38,9 @@ const TREE = { plugin: 'filetree', key: 'tree' } as const
 const THEME = { plugin: 'filetree', key: 'theme' } as const
 const ACTIVITY = { plugin: 'filetree', key: 'activity' } as const
 const PANE = 'filetree'
+// The tab is the icon alone, as Mellu.mate's tabs are: with several panes open, names were cut
+// to a few letters each. The folder's name is at the top of the tree.
+const TITLE = '▤'
 const CHANGES = { plugin: 'filetree', key: 'changes' } as const
 const NEW_FILE_LIMIT = 1_000_000
 const SHIMMER = Object.fromEntries(Object.entries(TONES).map(([k, v]) => [k, { bright: v.bright, dim: v.dim }]))
@@ -277,7 +280,7 @@ async function reset($: EngineInterface, root: string, focus = false): Promise<v
   await put($, () => ({ ...emptyTree(root), showHidden: prev.showHidden, showSize: prev.root ? prev.showSize : sizeDefault }))
   // Another folder: the changes of a file in the last one no longer belong here.
   if (prev.root !== root) await $.state.set(CHANGES, null)
-  const title = `Files: ${root.split('/').pop() || root}`
+  const title = TITLE
   if (focus) await $.ui.open({ id: PANE, title, focus: true })
   else if (!noDock) await $.ui.open({ id: PANE, title })
   await loadDirs($, [root])
@@ -1005,7 +1008,7 @@ export const register: Register = (on, options) => {
       await setActivities($, cur => cur.map(a => (a.state === 'running' ? { ...a, state: 'failed', label: `${a.kind} interrupted` } : a)))
       const cwd = await cwdOf($)
       if (!t.root || t.nodes.length === 0 || (follow && t.root !== cwd)) await reset($, cwd)
-      else if (!noDock) await $.ui.open({ id: PANE, title: `Files: ${t.root.split('/').pop() || t.root}` })
+      else if (!noDock) await $.ui.open({ id: PANE, title: TITLE })
     })()
     return next(e)
   })
