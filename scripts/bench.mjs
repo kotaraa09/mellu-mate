@@ -88,10 +88,12 @@ const ISOLATION = NODE_MAJOR >= 23 ? '--test-isolation=none' : '--experimental-t
 // the drive root, which the permission model refuses.
 // Asynchronous, so the free tests can grade several workspaces at once; a synchronous run
 // held up every other test in the suite.
-function runTests(dir, files) {
+// `only` keeps the tests whose name starts with it, so one file can grade rule by rule.
+function runTests(dir, files, only) {
   return new Promise((done) => {
     execFile(process.execPath, [
       '--permission', `--allow-fs-read=${dir}`, ISOLATION, '--test',
+      ...(only ? [`--test-name-pattern=^${only} `] : []),
       ...files.map((f) => relative(dir, f).split(sep).join('/')),
     ], { cwd: dir, encoding: 'utf8', timeout: 60_000, maxBuffer: 32 * 1024 * 1024 }, (error, stdout, stderr) => {
       const out = `${stdout ?? ''}${stderr ?? ''}`;
@@ -131,8 +133,10 @@ export async function gradeWorkspace(caseDir, workspace) {
         mkdirSync(join(copy, '.bench'), { recursive: true });
         const target = join(copy, '.bench', basename(c.hidden));
         cpSync(join(caseDir, c.hidden), target);
-        const r = await runTests(copy, [target]);
-        results.push({ name: c.name, passed: r.passed, why: r.out });
+        const r = await runTests(copy, [target], c.only);
+        // A name that matches no test passes nothing: node --test still exits 0 then.
+        const ran = !c.only || /# (pass|fail) [1-9]/.test(r.out);
+        results.push({ name: c.name, passed: r.passed && ran, why: ran ? r.out : `no test named ${c.only}` });
       } else if (c.ownTests) {
         const tests = files.filter(isTestFile);
         if (!tests.length) { results.push({ name: c.name, passed: false, why: 'no test files left' }); continue; }
