@@ -16,10 +16,15 @@ import type { Request, Step, Usage, Waiting } from '../types'
 import { clearHeld, clearHistory, clearOnStart, clearOnTurnEnd, holdText } from './clear-reminder'
 import { afterFigures, moneyRange } from './estimate'
 import { atEnd, atSubmit, cancelDraft, draftChanged } from './estimate-hooks'
+import { FEATURES, FEATURES_DESCRIPTION } from './features'
 import { HELPERS_DESCRIPTION, helperEnded } from './savvy-progress/register'
 import { ASK_CLAUDE, CHECK_EVERY_MS, PLUGIN_STEP, RELEASES, installedFrom, latestFrom, newer, updateSteps } from './update'
 
 const CONTROLS = 'mellu-controls'
+// Each pane's tab is its icon alone: with the control panel, the progress panel, the file tree
+// and the feature map open, names were cut to a few letters each. The same icons as the
+// control panel's buttons.
+const CONTROLS_TITLE = '⚙'
 
 const request = atom({ plugin: 'mellu', key: 'request' } as const, null)
 const usage = atom({ plugin: 'mellu', key: 'usage' } as const, {
@@ -436,7 +441,7 @@ export const pressedNote = (p: { label: string; isQueued: boolean }): string =>
 // A symbol before each label, from the shapes every terminal font has. The desktop app shows
 // the same ones, so a button looks alike on both.
 const ICONS: Record<string, string> = {
-  continue: '▶', ship: '✓', undo: '↶', filetree: '▤', helpers: '◔', security: '◈', skills: '+', connect: '⇄',
+  continue: '▶', ship: '✓', undo: '↶', features: '☰', filetree: '▤', helpers: '◔', security: '◈', skills: '+', connect: '⇄',
   compact: '⇊', clear: '↺',
 }
 const withIcon = (key: string, label: string): string => (ICONS[key] ? `${ICONS[key]} ${label}` : label)
@@ -552,7 +557,7 @@ const endRequest = async ($: any, aborted = false) => {
 }
 
 const openControls = async ($: any) => {
-  void $.ui.open({ id: CONTROLS, title: 'Mellu.mate: controls' })
+  void $.ui.open({ id: CONTROLS, title: CONTROLS_TITLE })
 }
 
 // Claude Code takes one hook per event from a plugin, so the three events the other parts
@@ -570,6 +575,7 @@ export const register: Register = (on) => {
         await update($, helpersNow, () => at)
       })()
     })
+    await $.command.register({ name: FEATURES, description: FEATURES_DESCRIPTION })
     await $.command.register({ name: 'mellu-panels', description: 'Open the Mellu.mate control panel' })
     await update($, usage, () => ({ costUsd: null, contextTokens: null, contextWindow: null, contextPercent: null }))
     // A resumed or reloaded session starts with no request in progress.
@@ -840,6 +846,8 @@ export const register: Register = (on) => {
             command('plain', 'Plain answers on', 'mellu:plain', 'on'), command('plain', 'Plain answers off', 'mellu:plain', 'off')))}
         </Box>
         {group([
+          { key: 'features', label: 'Your app', note: 'What your app does, feature by feature, and what changed. Changes nothing',
+            onPress: command('features', 'Your app', FEATURES) },
           { key: 'filetree', label: 'Project files', note: 'A list of your files beside the chat. Changes nothing',
             onPress: command('filetree', 'Project files', 'filetree') },
           { key: 'helpers', label: 'Progress', note: 'Each step of your request, what Claude did, and its helpers. Changes nothing',

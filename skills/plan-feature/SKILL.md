@@ -96,6 +96,11 @@ Append to `docs/STATE.md` under `## Next` — not a separate file, so it stays w
 - [ ] <task 3>
 ```
 
+If `docs/FEATURES.md` exists, add the feature there too, as the panel "Your app" shows it: a
+`## <feature name>` section in the user's words, one plain line on what it does, `- icon:`
+with one emoji that shows it, and `- files:` and `- tests:` lines once you know them. A change to a feature that is already listed adds
+nothing.
+
 Rules for the task list:
 - **Write it in the user's language and in their words.** The next session reads `## Now` and `## Next` back to them as its first lines. "Photos open full screen when tapped" is a task a beginner can follow; "lightbox modal in `gallery.js`" is not. Technical detail goes after a dash, if it is needed at all.
 - Each task is a **vertical slice that runs when it's done** — not "write the model", "write the view", "wire it up".

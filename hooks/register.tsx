@@ -4,6 +4,7 @@
 //   panels.tsx          the control panel, and the record of the request in progress
 //   clear-reminder.ts   holds the first message of a long stretch with a note about /clear
 //   savvy-progress/     the progress bar above the prompt, and the helpers panel
+//   features.tsx        the feature map: the app as a list of what it does
 //
 // Savvy Progress is vendored and adapted; its PROVENANCE.md says from where, and what
 // changed. The file tree and Blast Radius are plugins of their own in plugins/, installed
@@ -17,6 +18,7 @@
 import type { Register } from 'claude-code'
 
 import { register as clearReminder } from './clear-reminder'
+import { register as features } from './features'
 import { register as panels } from './panels'
 import { register as savvyProgress } from './savvy-progress/register'
 
@@ -24,4 +26,5 @@ export const register: Register = (on, options) => {
   panels(on, options)
   clearReminder(on, options)
   savvyProgress(on, options)
+  features(on, options)
 }

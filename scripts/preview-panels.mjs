@@ -30,14 +30,16 @@ const NAME = 'mellu-preview';
 const mod = join(target, NAME);
 
 // Mellu.mate's hooks module: the entry and the files it starts.
-const FILES = ['register.tsx', 'panels.tsx', 'clear-reminder.ts', 'savvy-progress/register.tsx', 'estimate.ts', 'estimate-hooks.ts', 'estimate-defaults.ts', 'tools-check.ts', 'update.ts'];
+const FILES = ['register.tsx', 'panels.tsx', 'clear-reminder.ts', 'savvy-progress/register.tsx', 'estimate.ts', 'estimate-hooks.ts', 'estimate-defaults.ts', 'tools-check.ts', 'update.ts', 'features.tsx'];
 const swaps = [
   [/plugin: 'mellu'/g, `plugin: '${NAME}'`],
   [/'mellu-controls'/g, `'${NAME}-controls'`],
   [/'mellu-helpers'/g, `'${NAME}-helpers'`],
   [/'mellu-panels'/g, `'${NAME}'`],
-  [/'Mellu.mate: controls'/g, `'Preview: controls'`],
-  [/'Mellu.mate: progress'/g, `'Preview: progress'`],
+  [/'mellu-features'/g, `'${NAME}-features'`],
+  [/const CONTROLS_TITLE = '⚙'/g, "const CONTROLS_TITLE = '⚙ P'"],
+  [/const FEATURES_TITLE = '☰'/g, "const FEATURES_TITLE = '☰ P'"],
+  [/pane: '◔'/g, "pane: '◔ P'"],
 ];
 const sources = Object.fromEntries(FILES.map((f) => [f, readFileSync(join(root, 'hooks', f), 'utf8')]));
 // Every swap must hit somewhere: one that missed would leave the real plugin's state, pane ids
@@ -130,6 +132,7 @@ const treeSwaps = {
   'hooks/register.tsx': [
     [/plugin: 'filetree'/g, `plugin: '${TREE}'`],
     [/const PANE = 'filetree'/g, `const PANE = '${TREE}'`],
+    [/const TITLE = '▤'/g, "const TITLE = '▤ P'"],
     [/name: 'filetree'/g, `name: '${TREE}'`],
     [/command: 'filetree'/g, `command: '${TREE}'`],
   ],
