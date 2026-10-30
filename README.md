@@ -52,7 +52,7 @@ Where it helps, it does more work and costs more: about $0.23 against $0.13 for 
 - Stops a commit that would save an API key or a password, and says which file the key is in.
 - Answers in your language and in plain words; `/mellu:plain off` turns the plain words off.
 - Shows its progress in a bar above the prompt, and puts each feature on a button in a control panel.
-- Lists your app feature by feature in a "Your app" panel, and marks the features that changed since your last saved version.
+- Lists your app feature by feature in a "Your app" panel, marks the features that changed since your last saved version, and marks as Checked the ones whose tests passed after that change.
 - Says what a request usually costs while you type it, before you send it: dollars, minutes and, on a Claude plan, the share of your 5-hour limit. After the request, the bar shows the real cost beside that range.
 
 <details>
