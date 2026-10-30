@@ -1,7 +1,7 @@
 # Evals
 
 Nineteen cases that check **which skill fires on which sentence**, run by `claude plugin eval`.
-Thirteen more, in [`outcomes/`](outcomes/), check **whether the result works**. See
+Fifteen more, in [`outcomes/`](outcomes/), check **whether the result works**. See
 [the outcome benchmark](#the-outcome-benchmark).
 
 ## The gap they cover
@@ -515,6 +515,28 @@ you found it" fixed that.
 Without the style, one Thai bug-fix run of three still opened with an English note ("This
 is a small, simple decisions log - not worth adding..."), despite the language line from
 0.2.0. With the style on, none did.
+
+**A long rule set, graded rule by rule.** `outcome-character-rules` runs in its own small
+project, not the shop: a character creator for a made-up tabletop game, with a rule book of
+25 rules that depend on each other (origin, scores, class, subclass, background, skills) and
+code that follows none of them. The beginner says "make the character creator follow every
+rule in RULES.md". `check.mjs` has one check per rule, each one named test of
+`hidden.test.mjs` (`only: 'R07'`), so a run's checks say how many rules it built and which
+ones it left out. The rules are made up, so Claude cannot fill a gap from memory of a real
+game. It counts how many rules of a long rule set Claude builds:
+
+```bash
+node scripts/bench.mjs --case outcome-character-rules
+```
+
+`outcome-character-rules-pdf` is the same task with the rule book as a 31-page PDF
+(`RULES.pdf`, built by `make-pdf.mjs` from `book.txt`): the same 25 rules, between lore,
+equipment lists and a bestiary, with the name and level rules and the "same skill twice"
+rule only in the appendix at the end. Same hidden tests, so the two tasks compare directly:
+the difference is how a long document reaches Claude. On Windows without poppler, a read
+of chosen PDF pages fails; a read of the whole file works. Until 2026-10-30 the book did not
+say that the skills field is an object, so runs before then failed the three skill rules on
+that format, not on reading.
 
 **Setup in a project someone else started.** `outcome-adopt-existing` runs setup in a
 recipe site that a friend handed over: `docs/` is a published MkDocs site, decisions are one
